@@ -5,13 +5,12 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
 import 'package:web_socket_client/web_socket_client.dart';
-import 'package:http/http.dart' as http;
 
 /// =======================
 /// 全局配置（无默认值）
 /// =======================
-int port = 0;
-int interval = 0;
+int port = 9090;
+int interval = 1000;
 
 /// =======================
 /// 数据状态
@@ -68,10 +67,7 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    final settings = await readYamlAsMap(settingsPath);
 
-    port = settings['port'];
-    interval = settings['interval'];
 
     ws = WsManager(state);
     ws.connect();
@@ -87,7 +83,10 @@ class MyTaskHandler extends TaskHandler {
 
     _timer = Timer.periodic(Duration(milliseconds: interval), (_) {
       if (state.connected) {
-        FlutterForegroundTask.updateService(notificationTitle: 'mihomo 网速监控', notificationText: '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}');
+        FlutterForegroundTask.updateService(
+          notificationTitle: 'mihomo 网速监控',
+          notificationText: '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}',
+        );
       } else {
         FlutterForegroundTask.updateService(notificationTitle: 'mihomo 网速监控', notificationText: '正在连接核心...');
       }
@@ -107,7 +106,10 @@ class MyTaskHandler extends TaskHandler {
   Future<void> _disconnectAll() async {
     final dio = Dio();
 
-    await dio.delete('http://127.0.0.1:$port/connections', options: Options(headers: {'Content-Type': 'application/json'}));
+    await dio.delete(
+      'http://127.0.0.1:$port/connections',
+      options: Options(headers: {'Content-Type': 'application/json'}),
+    );
   }
 
   @override
@@ -132,9 +134,27 @@ void startCallback() {
 /// 启动服务
 /// =======================
 void initAndStartService() {
-  FlutterForegroundTask.init(androidNotificationOptions: AndroidNotificationOptions(channelId: 'test_channel', channelName: '测试通知', channelDescription: 'demo', channelImportance: NotificationChannelImportance.LOW, priority: NotificationPriority.LOW), foregroundTaskOptions: ForegroundTaskOptions(autoRunOnBoot: false, allowWakeLock: true, eventAction: ForegroundTaskEventAction.repeat(1000)), iosNotificationOptions: IOSNotificationOptions(showNotification: false, playSound: false));
-
-  FlutterForegroundTask.startService(notificationTitle: '服务已启动', notificationText: 'mihomo 监控运行中', notificationButtons: const [NotificationButton(id: 'disconnect', text: '断开连接')], callback: startCallback);
+  FlutterForegroundTask.init(
+    androidNotificationOptions: AndroidNotificationOptions(
+      channelId: 'mihomo_channel',
+      channelName: 'mihomo 核心监控',
+      channelDescription: '用于展示核心流量与连接状态的前台服务通知',
+      channelImportance: NotificationChannelImportance.LOW,
+      priority: NotificationPriority.LOW,
+    ),
+    foregroundTaskOptions: ForegroundTaskOptions(
+      autoRunOnBoot: false,
+      allowWakeLock: true,
+      eventAction: ForegroundTaskEventAction.repeat(1000),
+    ),
+    iosNotificationOptions: IOSNotificationOptions(showNotification: false, playSound: false),
+  );
+  FlutterForegroundTask.startService(
+    notificationTitle: '服务已启动',
+    notificationText: 'mihomo 监控运行中',
+    notificationButtons: const [NotificationButton(id: 'disconnect', text: '断开连接')],
+    callback: startCallback,
+  );
 }
 
 /// =======================
