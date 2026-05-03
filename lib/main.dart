@@ -1,104 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:mihomoR/service/notification.dart';
+import 'package:mihomoR/service/tile.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
-import 'package:mihomoR/service/control.dart';
-import 'package:mihomoR/theme/theme.dart';
-import 'package:mihomoR/theme/util.dart';
-import 'package:mihomoR/widget.dart';
+import 'theme/theme.dart';
+import 'theme/util.dart';
+import 'widget.dart';
 
-/// =======================
-/// Foreground Task Handler
-/// =======================
-class MyTaskHandler extends TaskHandler {
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {}
 
-  @override
-  void onRepeatEvent(DateTime timestamp) {}
-
-  @override
-  Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {}
-}
-
-/// entry point（必须）
-@pragma('vm:entry-point')
-void startCallback() {
-  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
-}
-
-/// =======================
-/// 启动前台服务
-/// =======================
-void initAndStartService() {
-  FlutterForegroundTask.init(
-    androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'test_channel',
-      channelName: '测试通知',
-      channelDescription: 'demo',
-      channelImportance: NotificationChannelImportance.LOW,
-      priority: NotificationPriority.LOW,
-    ),
-    foregroundTaskOptions: ForegroundTaskOptions(
-      autoRunOnBoot: false,
-      allowWakeLock: true,
-      eventAction: ForegroundTaskEventAction.repeat(1000),
-    ),
-    iosNotificationOptions: IOSNotificationOptions(
-      showNotification: false,
-      playSound: false,
-    ),
-  );
-
-  FlutterForegroundTask.startService(
-    notificationTitle: '测试服务已启动',
-    notificationText: '这是一个前台通知Demo',
-    callback: startCallback,
-  );
-}
-
-/// =======================
-/// Tile callbacks
-/// =======================
-@pragma('vm:entry-point')
-Tile onTileClicked(Tile tile) {
-  final isActive = tile.tileStatus == TileStatus.active;
-
-  if (isActive) {
-    stopMihomo();
-
-    tile
-      ..tileStatus = TileStatus.inactive
-      ..label = "mihomo"
-      ..drawableName = "quick_settings_base_icon"
-      ..contentDescription = "mihomo 已停止";
-  } else {
-    startMihomo();
-
-    tile
-      ..tileStatus = TileStatus.active
-      ..label = "mihomo"
-      ..drawableName = "quick_settings_base_icon"
-      ..contentDescription = "mihomo 已启动";
-  }
-
-  return tile;
-}
-
-@pragma('vm:entry-point')
-Tile? onTileAdded(Tile tile) {
-  tile.label = "mihomo";
-  tile.drawableName = "quick_settings_base_icon";
-  tile.contentDescription = "mihomo 核心控制";
-  tile.tileStatus = TileStatus.inactive;
-  return tile;
-}
-
-@pragma('vm:entry-point')
-void onTileRemoved() {}
-
-/// =======================
-/// App entry
-/// =======================
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
