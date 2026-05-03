@@ -33,6 +33,7 @@ dependencies:
   flutter_native_splash: any
   flutter_device_apps: any
   flutter_foreground_task: any
+  web_socket_client: any
 
 flutter:
   uses-material-design: true
