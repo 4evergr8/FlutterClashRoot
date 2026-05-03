@@ -66,8 +66,31 @@ class MyTaskHandler extends TaskHandler {
   Timer? _timer;
 
   @override
+  @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    try {
+      final settings = await readYamlAsMap(settingsPath);
 
+      port = settings['port'];
+      interval = settings['interval'];
+    } catch (e) {
+      // 直接用通知显示错误
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'mihomo 错误',
+        notificationText: '$e',
+      );
+
+      // 启动一个简单的“静态错误循环”，防止系统回收
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        FlutterForegroundTask.updateService(
+          notificationTitle: 'mihomo 错误',
+          notificationText: '$e',
+        );
+      });
+
+      return; // 关键：阻止后续 WS / Timer 正常流程
+    }
 
     ws = WsManager(state);
     ws.connect();
