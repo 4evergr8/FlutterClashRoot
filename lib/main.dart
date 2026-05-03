@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:mihomoR/service/control.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
+import 'package:mihomoR/service/control.dart';
 import 'package:mihomoR/theme/theme.dart';
 import 'package:mihomoR/theme/util.dart';
 import 'package:mihomoR/widget.dart';
 
+/// =======================
+/// Foreground Task Handler
+/// =======================
+class MyTaskHandler extends TaskHandler {
+  @override
+  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {}
 
+  @override
+  void onRepeatEvent(DateTime timestamp) {}
 
+  @override
+  Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {}
+}
 
+/// entry point（必须）
+@pragma('vm:entry-point')
+void startCallback() {
+  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
+}
 
-
+/// =======================
+/// 启动前台服务
+/// =======================
 void initAndStartService() {
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
@@ -22,7 +40,8 @@ void initAndStartService() {
     ),
     foregroundTaskOptions: ForegroundTaskOptions(
       autoRunOnBoot: false,
-      allowWakeLock: true,eventAction: ForegroundTaskEventAction.nothing(),
+      allowWakeLock: true,
+      eventAction: ForegroundTaskEventAction.repeat(1000),
     ),
     iosNotificationOptions: IOSNotificationOptions(
       showNotification: false,
@@ -33,9 +52,13 @@ void initAndStartService() {
   FlutterForegroundTask.startService(
     notificationTitle: '测试服务已启动',
     notificationText: '这是一个前台通知Demo',
+    callback: startCallback,
   );
 }
-/// Tile 点击回调
+
+/// =======================
+/// Tile callbacks
+/// =======================
 @pragma('vm:entry-point')
 Tile onTileClicked(Tile tile) {
   final isActive = tile.tileStatus == TileStatus.active;
@@ -61,7 +84,6 @@ Tile onTileClicked(Tile tile) {
   return tile;
 }
 
-/// Tile 添加回调
 @pragma('vm:entry-point')
 Tile? onTileAdded(Tile tile) {
   tile.label = "mihomo";
@@ -70,11 +92,12 @@ Tile? onTileAdded(Tile tile) {
   return tile;
 }
 
-/// Tile 移除回调
 @pragma('vm:entry-point')
 void onTileRemoved() {}
 
-
+/// =======================
+/// App entry
+/// =======================
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
@@ -100,7 +123,7 @@ class MyApp extends StatelessWidget {
     MaterialTheme theme = MaterialTheme(textTheme);
 
     return MaterialApp(
-      navigatorKey: navigatorKey, // 绑定全局 key
+      navigatorKey: navigatorKey,
       title: 'mihomoR',
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
       home: const HomeScreen(),
@@ -112,7 +135,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
