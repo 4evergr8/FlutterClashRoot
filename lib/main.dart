@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:mihomoR/service/control.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:mihomoR/theme/theme.dart';
 import 'package:mihomoR/theme/util.dart';
 import 'package:mihomoR/widget.dart';
 
+
+
+
+
+
+void initAndStartService() {
+  FlutterForegroundTask.init(
+    androidNotificationOptions: AndroidNotificationOptions(
+      channelId: 'test_channel',
+      channelName: '测试通知',
+      channelDescription: 'demo',
+      channelImportance: NotificationChannelImportance.LOW,
+      priority: NotificationPriority.LOW,
+    ),
+    foregroundTaskOptions: ForegroundTaskOptions(
+      autoRunOnBoot: false,
+      allowWakeLock: true,eventAction: ForegroundTaskEventAction.nothing(),
+    ),
+    iosNotificationOptions: IOSNotificationOptions(
+      showNotification: false,
+      playSound: false,
+    ),
+  );
+
+  FlutterForegroundTask.startService(
+    notificationTitle: '测试服务已启动',
+    notificationText: '这是一个前台通知Demo',
+  );
+}
 /// Tile 点击回调
 @pragma('vm:entry-point')
 Tile onTileClicked(Tile tile) {
@@ -57,6 +87,7 @@ void main() {
   );
 
   runApp(const MyApp());
+  initAndStartService();
 }
 
 class MyApp extends StatelessWidget {
