@@ -1,10 +1,20 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:mihomoR/service/path.dart';
+import 'package:mihomoR/service/subscriptions.dart';
 import 'package:web_socket_client/web_socket_client.dart';
+import 'package:http/http.dart' as http;
 
 /// =======================
-/// 数据状态（共享层）
+/// 全局配置（无默认值）
+/// =======================
+int port = 0;
+int interval = 0;
+
+/// =======================
+/// 数据状态
 /// =======================
 class TrafficState {
   int up = 0;
@@ -13,7 +23,7 @@ class TrafficState {
 }
 
 /// =======================
-/// WS（独立运行）
+/// WS（无手动重连）
 /// =======================
 class WsManager {
   WebSocket? _ws;
@@ -22,31 +32,23 @@ class WsManager {
   WsManager(this.state);
 
   void connect() {
-    try {
-      _ws = WebSocket(Uri.parse('ws://127.0.0.1:9090/traffic'));
+    _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'));
 
-      _ws!.messages.listen(
-            (event) {
-          final data = jsonDecode(event);
+    _ws!.messages.listen(
+      (event) {
+        final data = jsonDecode(event);
 
-          state.up = data['up'] ?? 0;
-          state.down = data['down'] ?? 0;
-          state.connected = true;
-        },
-        onError: (_) => _reconnect(),
-        onDone: () => _reconnect(),
-      );
-    } catch (_) {
-      _reconnect();
-    }
-  }
-
-  void _reconnect() {
-    state.connected = false;
-
-    Future.delayed(const Duration(seconds: 1), () {
-      connect();
-    });
+        state.up = data['up'] ?? 0;
+        state.down = data['down'] ?? 0;
+        state.connected = true;
+      },
+      onError: (_) {
+        state.connected = false;
+      },
+      onDone: () {
+        state.connected = false;
+      },
+    );
   }
 
   void close() {
@@ -66,6 +68,11 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    final settings = await readYamlAsMap(settingsPath);
+
+    port = settings['port'];
+    interval = settings['interval'];
+
     ws = WsManager(state);
     ws.connect();
 
@@ -73,24 +80,34 @@ class MyTaskHandler extends TaskHandler {
   }
 
   /// =======================
-  /// 通知定时器（1秒刷新）
+  /// 通知刷新（interval控制）
   /// =======================
   void _startNotifyLoop() {
     _timer?.cancel();
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    _timer = Timer.periodic(Duration(milliseconds: interval), (_) {
       if (state.connected) {
-        FlutterForegroundTask.updateService(
-          notificationTitle: 'mihomo 网络监控',
-          notificationText: '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}',
-        );
+        FlutterForegroundTask.updateService(notificationTitle: 'mihomo 网速监控', notificationText: '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}');
       } else {
-        FlutterForegroundTask.updateService(
-          notificationTitle: 'mihomo 网络监控',
-          notificationText: '连接异常 / 重连中...',
-        );
+        FlutterForegroundTask.updateService(notificationTitle: 'mihomo 网速监控', notificationText: '正在连接核心...');
       }
     });
+  }
+
+  /// =======================
+  /// 按钮：断开所有连接（仅发 HTTP DELETE）
+  /// =======================
+  @override
+  void onReceiveData(Object data) {
+    if (data is Map && data['id'] == 'disconnect') {
+      _disconnectAll();
+    }
+  }
+
+  Future<void> _disconnectAll() async {
+    final dio = Dio();
+
+    await dio.delete('http://127.0.0.1:$port/connections', options: Options(headers: {'Content-Type': 'application/json'}));
   }
 
   @override
@@ -104,7 +121,7 @@ class MyTaskHandler extends TaskHandler {
 }
 
 /// =======================
-/// entry point（必须）
+/// entry point
 /// =======================
 @pragma('vm:entry-point')
 void startCallback() {
@@ -112,34 +129,17 @@ void startCallback() {
 }
 
 /// =======================
-/// 启动前台服务
+/// 启动服务
 /// =======================
 void initAndStartService() {
-  FlutterForegroundTask.init(
-    androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'test_channel',
-      channelName: '测试通知',
-      channelDescription: 'demo',
-      channelImportance: NotificationChannelImportance.LOW,
-      priority: NotificationPriority.LOW,
-    ),
-    foregroundTaskOptions: ForegroundTaskOptions(
-      autoRunOnBoot: false,
-      allowWakeLock: true,
-      eventAction: ForegroundTaskEventAction.repeat(1000),
-    ),
-    iosNotificationOptions: IOSNotificationOptions(
-      showNotification: false,
-      playSound: false,
-    ),
-  );
+  FlutterForegroundTask.init(androidNotificationOptions: AndroidNotificationOptions(channelId: 'test_channel', channelName: '测试通知', channelDescription: 'demo', channelImportance: NotificationChannelImportance.LOW, priority: NotificationPriority.LOW), foregroundTaskOptions: ForegroundTaskOptions(autoRunOnBoot: false, allowWakeLock: true, eventAction: ForegroundTaskEventAction.repeat(1000)), iosNotificationOptions: IOSNotificationOptions(showNotification: false, playSound: false));
 
-  FlutterForegroundTask.startService(
-    notificationTitle: '测试服务已启动',
-    notificationText: '这是一个前台通知Demo',
-    callback: startCallback,
-  );
+  FlutterForegroundTask.startService(notificationTitle: '服务已启动', notificationText: 'mihomo 监控运行中', notificationButtons: const [NotificationButton(id: 'disconnect', text: '断开连接')], callback: startCallback);
 }
+
+/// =======================
+/// 速度格式化（B基准，不除以8）
+/// =======================
 String formatSpeed(int bps) {
   if (bps < 1024) {
     return '$bps B/s';
@@ -148,10 +148,8 @@ String formatSpeed(int bps) {
   double value = bps.toDouble();
 
   if (value < 1024 * 1024) {
-    value = value / 1024;
-    return '${value.toStringAsFixed(1)} KB/s';
+    return '${(value / 1024).toStringAsFixed(1)} KB/s';
   }
 
-  value = value / (1024 * 1024);
-  return '${value.toStringAsFixed(1)} MB/s';
+  return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB/s';
 }
