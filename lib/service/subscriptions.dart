@@ -60,7 +60,7 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
   final filePath = '${dir.path}/$id.yaml';
 
   try {
-    final response = await dio.download(url, filePath, options: Options(responseType: ResponseType.bytes, followRedirects: true, headers: {'User-Agent': ua}, connectTimeout: Duration(seconds: timeout), sendTimeout: Duration(seconds: timeout), receiveTimeout: Duration(seconds: timeout)));
+    final response = await dio.download(url, filePath, options: Options(responseType: ResponseType.bytes, followRedirects: true, headers: {'User-Agent': ua}, connectTimeout: Duration(milliseconds: timeout), sendTimeout: Duration(milliseconds: timeout), receiveTimeout: Duration(milliseconds: timeout)));
 
     final headers = response.headers.map;
     String label = id;
