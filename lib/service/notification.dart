@@ -100,8 +100,8 @@ class MyTaskHandler extends TaskHandler {
   /// 按钮：断开所有连接（仅发 HTTP DELETE）
   /// =======================
   @override
-  void onReceiveData(Object data) {
-    if (data is Map && data['id'] == 'disconnect') {
+  void onNotificationButtonPressed(String id) {
+    if (id == 'disconnect') {
       _disconnectAll();
     }
   }
