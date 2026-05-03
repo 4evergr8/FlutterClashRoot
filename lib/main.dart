@@ -89,6 +89,7 @@ Tile? onTileAdded(Tile tile) {
   tile.label = "mihomo";
   tile.drawableName = "quick_settings_base_icon";
   tile.contentDescription = "mihomo 核心控制";
+  tile.tileStatus = TileStatus.inactive;
   return tile;
 }
 
