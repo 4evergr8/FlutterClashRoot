@@ -107,7 +107,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
               : <Map<String, dynamic>>[];
 
           final settings = await readYamlAsMap(settingsPath);
-          final selectedId = settings['selected'];
+          final selectedId = settings['select'];
 
           for (final sub in subs) {
             if (sub['id'] == selectedId) {
