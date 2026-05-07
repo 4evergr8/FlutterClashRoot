@@ -19,7 +19,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   bool get wantKeepAlive => false;
   List<Map<String, dynamic>> subscriptions = [];
   bool isLoading = true;
-  String? selectedId;
 
   String formatSize(int bytes) {
     const mb = 1024 * 1024;
@@ -76,6 +75,24 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     return '${parts.join()}前';
   }
 
+  void applySubscriptions(List<Map<String, dynamic>> list) {
+    final normalized = list.map((e) => Map<String, dynamic>.from(e)).toList();
+
+    normalized.sort((a, b) {
+      final aFav = a['favorite'] == true ? 0 : 1;
+      final bFav = b['favorite'] == true ? 0 : 1;
+
+      if (aFav != bFav) return aFav - bFav;
+
+      final al = (a['label'] ?? '').toString();
+      final bl = (b['label'] ?? '').toString();
+      return al.compareTo(bl);
+    });
+
+    subscriptions = normalized;
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
@@ -117,43 +134,57 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
 
-      final list =
-          (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
+      final list = (data['subscriptions'] is List)
+          ? List<Map<String, dynamic>>.from(data['subscriptions'])
+          : <Map<String, dynamic>>[];
 
       final ua = settings['ua'];
       final timeout = settings['timeout'];
 
-      // 原数据 Map（按 id）
-      final Map<String, Map<String, dynamic>> resultMap = {for (var s in list) s['id']: Map<String, dynamic>.from(s)};
+      final Map<String, Map<String, dynamic>> resultMap = {
+        for (var s in list) s['id']: Map<String, dynamic>.from(s)
+      };
 
-      // 并行任务
-      final futures =
-          list.map((sub) async {
-            final id = sub['id'];
-            try {
-              final downloadResult = await downloadYamlFile(sub['link'], ua, id, timeout);
-              return {'id': id, 'data': downloadResult};
-            } catch (e) {
-              showErrorSnackBarGlobal('${sub['label'] ?? id} 失败: $e');
-              return null;
-            }
-          }).toList();
+      final futures = list.map((sub) async {
+        final id = sub['id'];
+        try {
+          final downloadResult =
+          await downloadYamlFile(sub['link'], ua, id, timeout);
+          return {'id': id, 'data': downloadResult};
+        } catch (e) {
+          showErrorSnackBarGlobal('${sub['label'] ?? id} 失败: $e');
+          return null;
+        }
+      }).toList();
 
       final results = await Future.wait(futures);
 
-      // 合并结果（成功才覆盖）
       for (var r in results) {
-        if (r != null) {
-          resultMap[r['id']] = {...(resultMap[r['id']] ?? {}), ...r['data']};
-        }
+        if (r == null) continue;
+
+        final id = r['id'];
+        final data = r['data'] as Map<String, dynamic>?;
+
+        if (data == null) continue;
+
+        final old = resultMap[id] ?? {};
+
+        resultMap[id] = {
+          ...old,
+
+          // 只允许这些字段被刷新覆盖
+          'expire': data['expire'] ?? old['expire'],
+          'update': data['update'] ?? old['update'],
+          'upload': data['upload'] ?? old['upload'],
+          'download': data['download'] ?? old['download'],
+          'total': data['total'] ?? old['total'],
+        };
       }
 
-      final newList =
-          resultMap.values.toList()..sort((a, b) => (a['label'] as String).compareTo(b['label'] as String));
-
+      final newList = resultMap.values.toList();
+      applySubscriptions(newList);  // ✅ 这里会自动 setState
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
+
 
       if (mounted) {
         setState(() => subscriptions = newList);
@@ -170,17 +201,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
     try {
       final data = await readYamlAsMap(subscriptionsPath);
-      final list = (data['subscriptions'] is List) ? data['subscriptions'] as List : [];
-      subscriptions = list.map((e) => Map<String, dynamic>.from(e)).toList();
-      subscriptions.sort((a, b) {
-        final aSel = a['favorite'] == true ? 0 : 1;
-        final bSel = b['favorite'] == true ? 0 : 1;
-        if (aSel != bSel) return aSel - bSel; // selected=true 在前
-        return (a['label'] as String).compareTo(b['label'] as String); // label 排序
-      });
-
-      final settings = await readYamlAsMap(settingsPath);
-      selectedId = settings['select'] as String?;
+      final list = (data['subscriptions'] as List?) ?? [];
+      subscriptions = List<Map<String, dynamic>>.from(list);
     } catch (e) {
       subscriptions = [];
       showErrorSnackBarGlobal('$e');
@@ -212,13 +234,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = {'subscriptions': subscriptions};
       await writeYamlFromMap(data, subscriptionsPath);
       await Process.run('su', ['-c', 'rm -f /data/adb/mihomo/config/${sub['id']}.yaml']);
-
-      if (selectedId == sub['id']) {
-        selectedId = null;
-        final settings = await readYamlAsMap(settingsPath);
-        settings['select'] = null;
-        await writeYamlFromMap(settings, settingsPath);
+      if (sub['select'] == true && subscriptions.isNotEmpty) {
+        subscriptions.first['select'] = true;
       }
+      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
 
       setState(() {});
     } catch (e) {
@@ -327,14 +346,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
           list.add(r);
         }
       }
+      applySubscriptions(list);
 
-      list.sort((a, b) => (a['label'] as String).compareTo(b['label'] as String));
 
       await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
 
-      if (mounted) {
-        setState(() => subscriptions = list);
-      }
     } catch (e) {
       showErrorSnackBarGlobal('$e');
     } finally {
@@ -370,7 +386,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                       return v.clamp(0, 100);
                     }
 
-                    final isSelected = sub['id'] == selectedId;
+                    final isSelected = sub['select'] == true;
 
                     return Card(
                       color:
@@ -382,10 +398,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: () async {
-                          setState(() => selectedId = sub['id']);
-                          final settings = await readYamlAsMap(settingsPath);
-                          settings['select'] = sub['id'];
-                          await writeYamlFromMap(settings, settingsPath);
+                          setState(() {
+                            for (final s in subscriptions) {
+                              s['select'] = false;
+                            }
+                            sub['select'] = true;
+                          });
+                          await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
                           await _onSubscriptionTap(sub['id']);
                         },
                         child: Padding(
@@ -526,9 +545,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                     children: [
                                       IconButton(
                                         icon: Icon(
-                                          (sub['favorite'] ?? false)
-                                              ? Icons.star
-                                              : Icons.star_border,
+                                          (sub['favorite'] ?? false) ? Icons.star : Icons.star_border,
                                           size: 20,
                                           color:
                                               (sub['favorite'] ?? false)
@@ -539,6 +556,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                           final value = !(sub['favorite'] ?? false);
 
                                           setState(() => sub['favorite'] = value);
+                                          applySubscriptions(subscriptions);
 
                                           final close = await showLoadingDialogGlobal();
                                           try {
