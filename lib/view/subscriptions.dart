@@ -183,10 +183,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final newList = resultMap.values.toList();
       applySubscriptions(newList); // ✅ 这里会自动 setState
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
-
-      if (mounted) {
-        setState(() => subscriptions = newList);
-      }
     } catch (e) {
       showErrorSnackBarGlobal('刷新订阅失败: $e');
     } finally {
@@ -236,9 +232,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       if (sub['select'] == true && subscriptions.isNotEmpty) {
         subscriptions.first['select'] = true;
       }
+      applySubscriptions(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
-
-      setState(() {});
     } catch (e) {
       showErrorSnackBarGlobal('$e');
     } finally {
@@ -401,6 +396,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                             }
                             sub['select'] = true;
                           });
+                          applySubscriptions(subscriptions);
                           await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
                           await _onSubscriptionTap(sub['id']);
                         },
