@@ -203,6 +203,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = await readYamlAsMap(subscriptionsPath);
       final list = (data['subscriptions'] as List?) ?? [];
       subscriptions = List<Map<String, dynamic>>.from(list);
+      applySubscriptions(subscriptions);
+
     } catch (e) {
       subscriptions = [];
       showErrorSnackBarGlobal('$e');
