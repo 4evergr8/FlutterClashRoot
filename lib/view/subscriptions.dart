@@ -134,28 +134,27 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
 
-      final list = (data['subscriptions'] is List)
-          ? List<Map<String, dynamic>>.from(data['subscriptions'])
-          : <Map<String, dynamic>>[];
+      final list =
+          (data['subscriptions'] is List)
+              ? List<Map<String, dynamic>>.from(data['subscriptions'])
+              : <Map<String, dynamic>>[];
 
       final ua = settings['ua'];
       final timeout = settings['timeout'];
 
-      final Map<String, Map<String, dynamic>> resultMap = {
-        for (var s in list) s['id']: Map<String, dynamic>.from(s)
-      };
+      final Map<String, Map<String, dynamic>> resultMap = {for (var s in list) s['id']: Map<String, dynamic>.from(s)};
 
-      final futures = list.map((sub) async {
-        final id = sub['id'];
-        try {
-          final downloadResult =
-          await downloadYamlFile(sub['link'], ua, id, timeout);
-          return {'id': id, 'data': downloadResult};
-        } catch (e) {
-          showErrorSnackBarGlobal('${sub['label'] ?? id} 失败: $e');
-          return null;
-        }
-      }).toList();
+      final futures =
+          list.map((sub) async {
+            final id = sub['id'];
+            try {
+              final downloadResult = await downloadYamlFile(sub['link'], ua, id, timeout);
+              return {'id': id, 'data': downloadResult};
+            } catch (e) {
+              showErrorSnackBarGlobal('${sub['label'] ?? id} 失败: $e');
+              return null;
+            }
+          }).toList();
 
       final results = await Future.wait(futures);
 
@@ -182,9 +181,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
 
       final newList = resultMap.values.toList();
-      applySubscriptions(newList);  // ✅ 这里会自动 setState
+      applySubscriptions(newList); // ✅ 这里会自动 setState
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
-
 
       if (mounted) {
         setState(() => subscriptions = newList);
@@ -204,7 +202,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final list = (data['subscriptions'] as List?) ?? [];
       subscriptions = List<Map<String, dynamic>>.from(list);
       applySubscriptions(subscriptions);
-
     } catch (e) {
       subscriptions = [];
       showErrorSnackBarGlobal('$e');
@@ -350,9 +347,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
       applySubscriptions(list);
 
-
       await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
-
     } catch (e) {
       showErrorSnackBarGlobal('$e');
     } finally {
