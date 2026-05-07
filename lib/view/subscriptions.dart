@@ -1,9 +1,10 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:mihomoR/service/subscriptions.dart';
+import 'package:flutter/services.dart';
 import 'package:mihomoR/service/path.dart';
+import 'package:mihomoR/service/subscriptions.dart';
 import 'package:mihomoR/widget.dart';
 
 class SubscriptionView extends StatefulWidget {
@@ -20,7 +21,25 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   bool isLoading = true;
   String? selectedId;
 
-  String formatGB(int bytes) => (bytes / 1024 / 1024 / 1024).toStringAsFixed(1);
+  String formatSize(int bytes) {
+    const mb = 1024 * 1024;
+    const gb = mb * 1024;
+    const tb = gb * 1024;
+
+    final valueMB = bytes / mb;
+
+    if (valueMB < 1024) {
+      return '${valueMB.toStringAsFixed(1)}M';
+    }
+
+    final valueGB = bytes / gb;
+    if (valueGB < 1024) {
+      return '${valueGB.toStringAsFixed(1)}G';
+    }
+
+    final valueTB = bytes / tb;
+    return '${valueTB.toStringAsFixed(1)}T';
+  }
 
   String formatTimeAgo(String timestampMsStr) {
     final pastMs = int.tryParse(timestampMsStr);
@@ -75,8 +94,16 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final dio = Dio();
       final params = {'force': 'true'};
       final data = {"path": configPath};
-      await dio.put('http://127.0.0.1:$port/configs', queryParameters: params, data: data, options: Options(headers: {'Content-Type': 'application/json'}));
-      await dio.delete('http://127.0.0.1:$port/connections', options: Options(headers: {'Content-Type': 'application/json'}));
+      await dio.put(
+        'http://127.0.0.1:$port/configs',
+        queryParameters: params,
+        data: data,
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+      await dio.delete(
+        'http://127.0.0.1:$port/connections',
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
     } catch (e) {
       showErrorSnackBarGlobal('$e');
     } finally {
@@ -90,7 +117,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
 
-      final list = (data['subscriptions'] is List) ? List<Map<String, dynamic>>.from(data['subscriptions']) : <Map<String, dynamic>>[];
+      final list =
+          (data['subscriptions'] is List)
+              ? List<Map<String, dynamic>>.from(data['subscriptions'])
+              : <Map<String, dynamic>>[];
 
       final ua = settings['ua'];
       final timeout = settings['timeout'];
@@ -120,7 +150,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         }
       }
 
-      final newList = resultMap.values.toList()..sort((a, b) => (a['label'] as String).compareTo(b['label'] as String));
+      final newList =
+          resultMap.values.toList()..sort((a, b) => (a['label'] as String).compareTo(b['label'] as String));
 
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
 
@@ -134,57 +165,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     }
   }
 
-  Future<void> _mergeProxies() async {
-    final close = await showLoadingDialogGlobal();
-    try {
-      final subData = await readYamlAsMap(subscriptionsPath);
-      final list = (subData['subscriptions'] is List) ? subData['subscriptions'] as List : [];
-      final List<Map<String, dynamic>> allProxies = [];
-      final Set<String> proxyNames = {};
-
-      for (final subMap in list) {
-        try {
-          final sub = Map<String, dynamic>.from(subMap);
-          if (sub['selected'] != true) continue; // 只合并开启的
-          final subYaml = await readYamlAsMap("/data/adb/mihomo/config/${sub['id']}.yaml");
-          if (subYaml['proxies'] is List) {
-            final proxies = List<Map<String, dynamic>>.from(subYaml['proxies']);
-            for (var proxy in proxies) {
-              var name = proxy['name'] as String? ?? '未知';
-              var newName = name;
-              var count = 1;
-              while (proxyNames.contains(newName)) {
-                newName = "$name#$count";
-                count++;
-              }
-              proxyNames.add(newName);
-              proxy['name'] = newName;
-              allProxies.add(proxy);
-            }
-          }
-        } catch (e) {
-          showErrorSnackBarGlobal('订阅 ${subMap['label'] ?? subMap['id']} 读取失败: $e');
-        }
-      }
-
-      final merge = await readYamlAsMap(mergePath);
-      final yaml = overrideMap({'proxies': allProxies}, merge);
-      await writeYamlFromMap(yaml, configPath);
-      final settings = await readYamlAsMap(settingsPath);
-      final port = settings['port'];
-      final dio = Dio();
-      final params = {'force': 'true'};
-      final data = {"path": configPath};
-      settings['selected'] = 'merge';
-      await writeYamlFromMap(settings, settingsPath);
-      await dio.put('http://127.0.0.1:$port/configs', queryParameters: params, data: data, options: Options(headers: {'Content-Type': 'application/json'}));
-    } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
-  }
-
   Future<void> _loadSubscriptions() async {
     final close = await showLoadingDialogGlobal();
 
@@ -193,14 +173,14 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final list = (data['subscriptions'] is List) ? data['subscriptions'] as List : [];
       subscriptions = list.map((e) => Map<String, dynamic>.from(e)).toList();
       subscriptions.sort((a, b) {
-        final aSel = a['selected'] == true ? 0 : 1;
-        final bSel = b['selected'] == true ? 0 : 1;
+        final aSel = a['favorite'] == true ? 0 : 1;
+        final bSel = b['favorite'] == true ? 0 : 1;
         if (aSel != bSel) return aSel - bSel; // selected=true 在前
         return (a['label'] as String).compareTo(b['label'] as String); // label 排序
       });
 
       final settings = await readYamlAsMap(settingsPath);
-      selectedId = settings['selected'] as String?;
+      selectedId = settings['select'] as String?;
     } catch (e) {
       subscriptions = [];
       showErrorSnackBarGlobal('$e');
@@ -211,7 +191,18 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
-    final confirm = await showDialog<bool>(context: context, builder: (_) => AlertDialog(title: const Text('确认删除'), content: Text('确定删除订阅 "${sub['label']}" 吗？'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')), ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('确认'))]));
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('确认删除'),
+            content: Text('确定删除订阅 "${sub['label']}" 吗？'),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('确认')),
+            ],
+          ),
+    );
 
     if (confirm != true) return;
 
@@ -225,7 +216,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       if (selectedId == sub['id']) {
         selectedId = null;
         final settings = await readYamlAsMap(settingsPath);
-        settings['selected'] = null;
+        settings['select'] = null;
         await writeYamlFromMap(settings, settingsPath);
       }
 
@@ -245,7 +236,15 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       builder: (context) {
         return AlertDialog(
           title: const Text('添加订阅'),
-          content: SizedBox(width: double.maxFinite, child: TextField(controller: controller, minLines: 5, maxLines: 10, decoration: const InputDecoration(hintText: '每行一个订阅地址', border: OutlineInputBorder()))),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: TextField(
+              controller: controller,
+              minLines: 5,
+              maxLines: 10,
+              decoration: const InputDecoration(hintText: '每行一个订阅地址', border: OutlineInputBorder()),
+            ),
+          ),
           actions: [
             ElevatedButton.icon(
               onPressed: () async {
@@ -256,7 +255,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               icon: const Icon(Icons.paste),
               label: const Text('粘贴'),
             ),
-            ElevatedButton.icon(onPressed: () => Navigator.pop(context, controller.text), icon: const Icon(Icons.check), label: const Text('确认')),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context, controller.text),
+              icon: const Icon(Icons.check),
+              label: const Text('确认'),
+            ),
           ],
         );
       },
@@ -273,7 +276,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final timeout = settings['timeout'];
 
       final data = await readYamlAsMap(subscriptionsPath);
-      final list = (data['subscriptions'] is List) ? List<Map<String, dynamic>>.from(data['subscriptions']) : <Map<String, dynamic>>[];
+      final list =
+          (data['subscriptions'] is List)
+              ? List<Map<String, dynamic>>.from(data['subscriptions'])
+              : <Map<String, dynamic>>[];
 
       final existingLinks = list.map((e) => e['link']).toSet();
 
@@ -367,7 +373,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                     final isSelected = sub['id'] == selectedId;
 
                     return Card(
-                      color: isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surface,
+                      color:
+                          isSelected
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : Theme.of(context).colorScheme.surface,
                       //     margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       clipBehavior: Clip.antiAlias,
@@ -375,7 +384,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                         onTap: () async {
                           setState(() => selectedId = sub['id']);
                           final settings = await readYamlAsMap(settingsPath);
-                          settings['selected'] = sub['id'];
+                          settings['select'] = sub['id'];
                           await writeYamlFromMap(settings, settingsPath);
                           await _onSubscriptionTap(sub['id']);
                         },
@@ -391,21 +400,22 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                     alignment: Alignment.center,
                                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: (() {
-                                        final cs = Theme.of(context).colorScheme;
-                                        final count = sub['count'] ?? 0;
-                                        final alive = sub['alive'] ?? 0;
+                                      color:
+                                          (() {
+                                            final cs = Theme.of(context).colorScheme;
+                                            final count = sub['count'] ?? 0;
+                                            final alive = sub['alive'] ?? 0;
 
-                                        if (count == 0) return cs.error;
+                                            if (count == 0) return cs.error;
 
-                                        final r = alive / count;
+                                            final r = alive / count;
 
-                                        if (r >= 0.8) return cs.primary;
-                                        if (r >= 0.3) return cs.secondary;
-                                        if (r > 0) return cs.tertiary;
+                                            if (r >= 0.8) return cs.primary;
+                                            if (r >= 0.3) return cs.secondary;
+                                            if (r > 0) return cs.tertiary;
 
-                                        return cs.error;
-                                      })(),
+                                            return cs.error;
+                                          })(),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
                                     child: Text(
@@ -413,26 +423,34 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       style: TextStyle(
                                         fontSize: 12,
                                         height: 1,
-                                        color: (() {
-                                          final cs = Theme.of(context).colorScheme;
-                                          final count = sub['count'] ?? 0;
-                                          final alive = sub['alive'] ?? 0;
+                                        color:
+                                            (() {
+                                              final cs = Theme.of(context).colorScheme;
+                                              final count = sub['count'] ?? 0;
+                                              final alive = sub['alive'] ?? 0;
 
-                                          if (count == 0) return cs.onError;
+                                              if (count == 0) return cs.onError;
 
-                                          final r = alive / count;
+                                              final r = alive / count;
 
-                                          if (r >= 0.8) return cs.onPrimary;
-                                          if (r >= 0.3) return cs.onSecondary;
-                                          if (r > 0) return cs.onTertiary;
+                                              if (r >= 0.8) return cs.onPrimary;
+                                              if (r >= 0.3) return cs.onSecondary;
+                                              if (r > 0) return cs.onTertiary;
 
-                                          return cs.onError;
-                                        })(),
+                                              return cs.onError;
+                                            })(),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 2),
-                                  Expanded(child: Text(sub['label'], maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium)),
+                                  Expanded(
+                                    child: Text(
+                                      sub['label'],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 8),
@@ -444,9 +462,21 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                   height: 10,
                                   child: Row(
                                     children: [
-                                      if ((sub['upload'] as int) > 0) Expanded(flex: scale(sub['upload'] as int), child: Container(color: Theme.of(context).colorScheme.primary)),
-                                      if ((sub['download'] as int) > 0) Expanded(flex: scale(sub['download'] as int), child: Container(color: Theme.of(context).colorScheme.secondary)),
-                                      Expanded(flex: (100 - scale(sub['upload'] as int) - scale(sub['download'] as int)).clamp(0, 100), child: Container(color: Theme.of(context).colorScheme.surfaceContainerHighest)),
+                                      if ((sub['upload'] as int) > 0)
+                                        Expanded(
+                                          flex: scale(sub['upload'] as int),
+                                          child: Container(color: Theme.of(context).colorScheme.primary),
+                                        ),
+                                      if ((sub['download'] as int) > 0)
+                                        Expanded(
+                                          flex: scale(sub['download'] as int),
+                                          child: Container(color: Theme.of(context).colorScheme.secondary),
+                                        ),
+                                      Expanded(
+                                        flex: (100 - scale(sub['upload'] as int) - scale(sub['download'] as int))
+                                            .clamp(0, 100),
+                                        child: Container(color: Theme.of(context).colorScheme.surfaceContainerHighest),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -462,11 +492,30 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(totalValue == 0 ? '上传: ∞  下载: ∞  总量: ∞' : '上传: ${formatGB(sub['upload'] as int)}G 下载: ${formatGB(sub['download'] as int)}G 总量: ${formatGB(totalValue)}G', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
+                                        Text(
+                                          totalValue == 0
+                                              ? '上传: ∞  下载: ∞  总量: ∞'
+                                              : '上传: ${formatSize(sub['upload'] as int)} 下载: ${formatSize(sub['download'] as int)} 总量: ${formatSize(totalValue)}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
                                         const SizedBox(height: 3),
-                                        Text((sub['expire'] as int) == 0 ? '到期时间: ∞' : '到期时间: ${DateTime.fromMillisecondsSinceEpoch((sub['expire'] as int) * 1000).toString().split(" ")[0]}', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
+                                        Text(
+                                          (sub['expire'] as int) == 0
+                                              ? '到期时间: ∞'
+                                              : '到期时间: ${DateTime.fromMillisecondsSinceEpoch((sub['expire'] as int) * 1000).toString().split(" ")[0]}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
                                         const SizedBox(height: 3),
-                                        Text('上次更新: ${formatTimeAgo(sub['update'] as String)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.bodySmall),
+                                        Text(
+                                          '上次更新: ${formatTimeAgo(sub['update'] as String)}',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context).textTheme.bodySmall,
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -476,21 +525,33 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: Icon((sub['selected'] ?? false) ? Icons.check_circle : Icons.radio_button_unchecked, size: 20, color: (sub['selected'] ?? false) ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface),
+                                        icon: Icon(
+                                          (sub['favorite'] ?? false)
+                                              ? Icons.star
+                                              : Icons.star_border,
+                                          size: 20,
+                                          color:
+                                              (sub['favorite'] ?? false)
+                                                  ? Theme.of(context).colorScheme.primary
+                                                  : Theme.of(context).colorScheme.onSurface,
+                                        ),
                                         onPressed: () async {
-                                          final value = !(sub['selected'] ?? false);
+                                          final value = !(sub['favorite'] ?? false);
 
-                                          setState(() => sub['selected'] = value);
+                                          setState(() => sub['favorite'] = value);
 
                                           final close = await showLoadingDialogGlobal();
                                           try {
                                             final data = await readYamlAsMap(subscriptionsPath);
-                                            final list = (data['subscriptions'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
+                                            final list =
+                                                (data['subscriptions'] as List)
+                                                    .map((e) => Map<String, dynamic>.from(e))
+                                                    .toList();
 
                                             final index = list.indexWhere((s) => s['id'] == sub['id']);
 
                                             if (index != -1) {
-                                              list[index]['selected'] = value;
+                                              list[index]['favorite'] = value;
                                               await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
                                             }
                                           } catch (e) {
@@ -502,7 +563,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       ),
 
                                       PopupMenuButton<int>(
-                                        icon: Icon(Icons.more_vert, size: 20, color: Theme.of(context).colorScheme.onSurface),
+                                        icon: Icon(
+                                          Icons.more_vert,
+                                          size: 20,
+                                          color: Theme.of(context).colorScheme.onSurface,
+                                        ),
                                         onSelected: (value) async {
                                           final settings = await readYamlAsMap(settingsPath);
                                           final ua = settings['ua'];
@@ -512,7 +577,12 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                             case 1:
                                               final close = await showLoadingDialogGlobal();
                                               try {
-                                                final downloadResult = await downloadYamlFile(sub['link'], ua, sub['id'], timeout);
+                                                final downloadResult = await downloadYamlFile(
+                                                  sub['link'],
+                                                  ua,
+                                                  sub['id'],
+                                                  timeout,
+                                                );
 
                                                 final index = subscriptions.indexWhere((s) => s['id'] == sub['id']);
 
@@ -520,7 +590,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                                   subscriptions[index] = {...subscriptions[index], ...downloadResult};
                                                 }
 
-                                                await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+                                                await writeYamlFromMap({
+                                                  'subscriptions': subscriptions,
+                                                }, subscriptionsPath);
 
                                                 setState(() {});
                                               } catch (e) {
@@ -542,9 +614,36 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                         },
                                         itemBuilder:
                                             (_) => const [
-                                              PopupMenuItem(value: 1, child: Row(children: [Icon(Icons.refresh, size: 18), SizedBox(width: 8), Text('刷新')])),
-                                              PopupMenuItem(value: 2, child: Row(children: [Icon(Icons.delete, size: 18), SizedBox(width: 8), Text('删除')])),
-                                              PopupMenuItem(value: 3, child: Row(children: [Icon(Icons.copy, size: 18), SizedBox(width: 8), Text('复制')])),
+                                              PopupMenuItem(
+                                                value: 1,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.refresh, size: 18),
+                                                    SizedBox(width: 8),
+                                                    Text('刷新'),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 2,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.delete, size: 18),
+                                                    SizedBox(width: 8),
+                                                    Text('删除'),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuItem(
+                                                value: 3,
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.copy, size: 18),
+                                                    SizedBox(width: 8),
+                                                    Text('复制'),
+                                                  ],
+                                                ),
+                                              ),
                                             ],
                                       ),
                                     ],
@@ -559,25 +658,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                   },
                 ),
               ),
-      floatingActionButton: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: FloatingActionButton(
-              heroTag: 'merge',
-              onPressed: () async {
-                setState(() => selectedId = 'merge');
-                await _mergeProxies();
-                showErrorSnackBarGlobal('订阅合并成功');
-              },
-              backgroundColor: selectedId == 'merge' ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.secondaryContainer,
-              child: Icon(selectedId == 'merge' ? Icons.check : Icons.merge_type, color: Theme.of(context).colorScheme.onPrimaryContainer),
-            ),
-          ),
-          FloatingActionButton(heroTag: 'add', onPressed: _addSubscription, child: const Icon(Icons.add)),
-        ],
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'add',
+        onPressed: _addSubscription,
+        child: const Icon(Icons.add),
       ),
     );
   }
