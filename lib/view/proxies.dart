@@ -100,25 +100,19 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         delayList = list;
 
         // ===== 写入 YAML 的 count =====
-        try {
-          final data = await readYamlAsMap(subscriptionsPath);
-          final subs = (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
 
-          final settings = await readYamlAsMap(settingsPath);
-          final selectedId = settings['select'];
+        final subsData = await readYamlAsMap(subscriptionsPath);
+        final subs = (subsData['subscriptions'] is List)
+            ? List<Map<String, dynamic>>.from(subsData['subscriptions'])
+            : <Map<String, dynamic>>[];
 
-          for (final sub in subs) {
-            if (sub['id'] == selectedId) {
-              sub['count'] = totalCount;
-              sub['alive'] = successCount;
-              break;
-            }
-          }
+        final selectedSub = subs.firstWhere(
+                (sub) => sub['select'] == true
+        );
+        selectedSub['count'] = totalCount;
+        selectedSub['alive'] = successCount;
+        await writeYamlFromMap({'subscriptions': subs}, subscriptionsPath);
 
-          await writeYamlFromMap({'subscriptions': subs}, subscriptionsPath);
-        } catch (_) {}
       }
 
       setState(() {});
@@ -133,6 +127,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   Color _getColor(BuildContext context, int delay) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    if (delay <= 0) return colorScheme.error; // timeout 或 <=0 显示红色
     if (delay <= 100) return colorScheme.primary;
     if (delay <= 300) return colorScheme.secondary;
     return colorScheme.error;
