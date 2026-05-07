@@ -1,7 +1,7 @@
 subscriptions:
   - id: "example"
     #订阅的ID,一般为时间戳,同时用作文件名
-    link: "https://raw.githubusercontent.com/4evergr8/mihomoR/refs/heads/main/mihomo/config/example.yaml"
+    link: ""
     #订阅下载链接
     label: "测试订阅"
     #订阅显示名称
