@@ -12,8 +12,6 @@ port: 9090
 #软件打开的控制端口,需要和配置中的端口对应
 timeout: 5000
 #下载订阅超时,毫秒
-select: example
-#当前选中的订阅的ID
 url: "https://www.google.com"
 #节点测速链接
 testtimeout: 2000
