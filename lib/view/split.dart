@@ -4,6 +4,8 @@ import 'package:flutter_device_apps/flutter_device_apps.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
 
+import '../widget.dart';
+
 class SplitView extends StatefulWidget {
   const SplitView({super.key});
 
@@ -31,47 +33,67 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
   }
 
   Future<void> _loadAppsAndYaml() async {
-    final override = await readYamlAsMap(overridePath);
-    final includePackages = List<String>.from(override['tun']['include-package'] ?? []);
-    yamlPackages = includePackages.toSet();
-    selectedPackages = includePackages.toSet();
+    final close = await showLoadingDialogGlobal();
 
-    final appList = await FlutterDeviceApps.listApps(includeSystem: true, includeIcons: true, onlyLaunchable: false);
-    final validApps = appList.where((a) => a.packageName != null && a.appName != null).toList();
+    try {
+      final override = await readYamlAsMap(overridePath);
 
-    // 将 YAML 中存在但未安装的包名生成虚拟 AppInfo（不显示图标）
-    for (final pkg in yamlPackages) {
-      if (!validApps.any((a) => a.packageName == pkg)) {
-        validApps.add(AppInfo(appName: null, packageName: pkg, iconBytes: null));
+      final includePackages = List<String>.from(override['tun']['include-package'] ?? []);
+
+      yamlPackages = includePackages.toSet();
+
+      selectedPackages = includePackages.toSet();
+
+      final appList = await FlutterDeviceApps.listApps(includeSystem: true, includeIcons: true, onlyLaunchable: false);
+
+      final validApps = appList.where((a) => a.packageName != null && a.appName != null).toList();
+
+      for (final pkg in yamlPackages) {
+        if (!validApps.any((a) => a.packageName == pkg)) {
+          validApps.add(AppInfo(appName: null, packageName: pkg, iconBytes: null));
+        }
       }
+
+      validApps.sort((a, b) {
+        final aSelected = selectedPackages.contains(a.packageName);
+        final bSelected = selectedPackages.contains(b.packageName);
+
+        if (aSelected && !bSelected) return -1;
+
+        if (!aSelected && bSelected) return 1;
+
+        return (a.appName ?? '').toLowerCase().compareTo((b.appName ?? '').toLowerCase());
+      });
+
+      if (mounted) {
+        setState(() {
+          apps = validApps;
+          filteredApps = List.from(validApps);
+          isLoading = false;
+        });
+      }
+    } finally {
+      close();
     }
-
-    // 勾选的置顶
-    validApps.sort((a, b) {
-      final aSelected = selectedPackages.contains(a.packageName);
-      final bSelected = selectedPackages.contains(b.packageName);
-      if (aSelected && !bSelected) return -1;
-      if (!aSelected && bSelected) return 1;
-      return (a.appName ?? '').toLowerCase().compareTo((b.appName ?? '').toLowerCase());
-    });
-
-    setState(() {
-      apps = validApps;
-      filteredApps = List.from(validApps);
-      isLoading = false;
-    });
   }
 
   void _filterApps(String query) {
     final q = query.toLowerCase();
     setState(() {
       searchQuery = query;
-      filteredApps = apps.where((app) => (app.appName ?? '').toLowerCase().contains(q) || (app.packageName ?? '').toLowerCase().contains(q)).toList();
+      filteredApps =
+          apps
+              .where(
+                (app) =>
+                    (app.appName ?? '').toLowerCase().contains(q) || (app.packageName ?? '').toLowerCase().contains(q),
+              )
+              .toList();
     });
   }
 
   Future<void> _saveSelection() async {
-    final checkedPackages = apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
+    final checkedPackages =
+        apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
     // YAML 中原本存在但不在 apps 列表中的包名也保留
     final newInclude = {...checkedPackages, ...yamlPackages.difference(apps.map((e) => e.packageName!).toSet())};
@@ -94,10 +116,16 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
       appBar: AppBar(title: const Text('分流')),
       body:
           isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const SizedBox.shrink()
               : Column(
                 children: [
-                  Padding(padding: const EdgeInsets.all(16), child: TextField(decoration: const InputDecoration(hintText: '筛选应用', border: OutlineInputBorder()), onChanged: _filterApps)),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: TextField(
+                      decoration: const InputDecoration(hintText: '筛选应用', border: OutlineInputBorder()),
+                      onChanged: _filterApps,
+                    ),
+                  ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: filteredApps.length,
@@ -126,7 +154,10 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
                             },
                             title: Text(displayName),
                             subtitle: Text(app.packageName ?? ''),
-                            secondary: iconBytes != null ? Image.memory(iconBytes, width: 40, height: 40) : const Icon(Icons.android, size: 40),
+                            secondary:
+                                iconBytes != null
+                                    ? Image.memory(iconBytes, width: 40, height: 40)
+                                    : const Icon(Icons.android, size: 40),
                           ),
                         );
                       },
