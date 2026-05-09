@@ -102,11 +102,6 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final override = await readYamlAsMap(overridePath);
     override['tun']['include-package'] = newInclude.toList();
     await writeYamlFromMap(override, overridePath);
-
-    // 更新 mergePath，完全替换 include-package
-    final merge = await readYamlAsMap(mergePath);
-    merge['tun']['include-package'] = newInclude.toList();
-    await writeYamlFromMap(merge, mergePath);
   }
 
   @override
