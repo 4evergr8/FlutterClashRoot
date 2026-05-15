@@ -150,7 +150,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
                         const SizedBox(width: 16),
                         Row(
                           children: [
-                            const Text('白名单'),
+                            Text(isWhitelist ? '白名单' : '黑名单'),
                             Switch(
                               value: isWhitelist,
                               onChanged: (v) {
