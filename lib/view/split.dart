@@ -22,9 +22,11 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
   String searchQuery = '';
   bool isLoading = true;
 
-  // 存储勾选的包名，包括 YAML 里存在但未安装的包名
   Set<String> selectedPackages = {};
   Set<String> yamlPackages = {};
+
+  // 新增：名单模式开关，true = 白名单，false = 黑名单
+  bool isWhitelist = false;
 
   @override
   void initState() {
@@ -38,14 +40,30 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     try {
       final override = await readYamlAsMap(overridePath);
 
-      final includePackages = List<String>.from(override['tun']['include-package'] ?? []);
-
-      yamlPackages = includePackages.toSet();
-
-      selectedPackages = includePackages.toSet();
+      // 判断名单方向和列表
+      if (override['tun'] != null) {
+        if (override['tun']['include-package'] != null) {
+          isWhitelist = true;
+          final includePackages = List<String>.from(override['tun']['include-package']);
+          yamlPackages = includePackages.toSet();
+          selectedPackages = includePackages.toSet();
+        } else if (override['tun']['exclude-package'] != null) {
+          isWhitelist = false;
+          final excludePackages = List<String>.from(override['tun']['exclude-package']);
+          yamlPackages = excludePackages.toSet();
+          selectedPackages = excludePackages.toSet();
+        } else {
+          isWhitelist = false;
+          yamlPackages = {};
+          selectedPackages = {};
+        }
+      } else {
+        isWhitelist = false;
+        yamlPackages = {};
+        selectedPackages = {};
+      }
 
       final appList = await FlutterDeviceApps.listApps(includeSystem: true, includeIcons: true, onlyLaunchable: false);
-
       final validApps = appList.where((a) => a.packageName != null && a.appName != null).toList();
 
       for (final pkg in yamlPackages) {
@@ -59,7 +77,6 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
         final bSelected = selectedPackages.contains(b.packageName);
 
         if (aSelected && !bSelected) return -1;
-
         if (!aSelected && bSelected) return 1;
 
         return (a.appName ?? '').toLowerCase().compareTo((b.appName ?? '').toLowerCase());
@@ -95,12 +112,18 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final checkedPackages =
         apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
-    // YAML 中原本存在但不在 apps 列表中的包名也保留
-    final newInclude = {...checkedPackages, ...yamlPackages.difference(apps.map((e) => e.packageName!).toSet())};
-
-    // 更新 overridePath
     final override = await readYamlAsMap(overridePath);
-    override['tun']['include-package'] = newInclude.toList();
+
+    override['tun'] ??= {};
+
+    if (isWhitelist) {
+      override['tun']['include-package'] = checkedPackages.toList();
+      override['tun'].remove('exclude-package');
+    } else {
+      override['tun']['exclude-package'] = checkedPackages.toList();
+      override['tun'].remove('include-package');
+    }
+
     await writeYamlFromMap(override, overridePath);
   }
 
@@ -116,9 +139,29 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: TextField(
-                      decoration: const InputDecoration(hintText: '筛选应用', border: OutlineInputBorder()),
-                      onChanged: _filterApps,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            decoration: const InputDecoration(hintText: '筛选应用', border: OutlineInputBorder()),
+                            onChanged: _filterApps,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Row(
+                          children: [
+                            const Text('白名单'),
+                            Switch(
+                              value: isWhitelist,
+                              onChanged: (v) {
+                                setState(() {
+                                  isWhitelist = v;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
