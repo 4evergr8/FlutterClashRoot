@@ -3,23 +3,18 @@ import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
 
 Future<void> stopMihomo() async {
-  final settings = await readYamlAsMap(settingsPath);
-  final stopCmd = settings['kill'] ?? '';
-  if (stopCmd.isNotEmpty) {
-    await Process.run("sh", ["-c", stopCmd]);
-  }
+  await Process.run("sh", [scriptPath, "kill"]);
 }
 
 Future<void> startMihomo() async {
-  final settings = await readYamlAsMap(settingsPath);
-  final stopCmd = settings['kill'] ?? '';
-  final startCmd = settings['start'] ?? '';
+  await Process.run("sh", [scriptPath, "kill"]);
+  await Process.start("sh", [scriptPath, "start"]);
+}
 
-  if (stopCmd.isNotEmpty) {
-    await Process.run("sh", ["-c", stopCmd]);
-  }
-  if (startCmd.isNotEmpty) {
-    await Process.start("sh", ["-c", startCmd]);
-  }
+Future<void> testMihomo() async {
+  await Process.run("sh", [scriptPath, "test"]);
+}
 
+Future<void> checkMihomo() async {
+  await Process.run("sh", [scriptPath, "check"]);
 }
