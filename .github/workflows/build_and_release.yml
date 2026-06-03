@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-mihomoR:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,6 +15,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.2'
+
+      - name: Get dependencies
+        run: flutter pub get
 
       - name: Build APK (arm64-v8a)
         run: flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
@@ -29,30 +32,31 @@ jobs:
           curl -L -o mihomoR/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 
       - name: Copy APK to mihomoR
-        run: |
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
+        run: cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
 
       - name: Download latest stable Mihomo release
         run: |
-          # 获取最新非 alpha release 版本的 download URL
-          MIHOMO_URL=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest \
-            | jq -r '.assets[] | select(.name | test("mihomo-android-arm64-v8-v[0-9]+\\.[0-9]+\\.[0-9]+\\.gz")) | .browser_download_url')
+          # 获取最新 release 的 JSON
+          RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)
+          # 找到非 alpha 的 arm64 APK
+          MIHOMO_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?mihomo-android-arm64-v8-v[0-9]+\.[0-9]+\.[0-9]+\.gz(?=")' | head -n 1)
+          echo "Downloading Mihomo: $MIHOMO_URL"
           curl -L -o mihomoR/mihomo.gz "$MIHOMO_URL"
           gunzip -f mihomoR/mihomo.gz
           chmod +x mihomoR/mihomo
 
       - name: Download latest stable MetaCubeXD release
         run: |
-          METACUBEXD_URL=$(curl -s https://api.github.com/repos/MetaCubeX/metacubexd/releases/latest \
-            | jq -r '.assets[] | select(.name=="compressed-dist.tgz") | .browser_download_url')
+          RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/metacubexd/releases/latest)
+          METACUBEXD_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?compressed-dist.tgz(?=")' | head -n 1)
+          echo "Downloading MetaCubeXD: $METACUBEXD_URL"
           mkdir -p mihomoR/metacubexd
           curl -L -o metacubexd.tgz "$METACUBEXD_URL"
           tar -xzf metacubexd.tgz -C mihomoR/metacubexd
           rm metacubexd.tgz
 
       - name: Package mihomoR.zip
-        run: |
-          zip -r mihomoR.zip mihomoR
+        run: zip -r mihomoR.zip mihomoR
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
