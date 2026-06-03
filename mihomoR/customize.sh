@@ -1,12 +1,12 @@
 #!/system/bin/sh
-SKIPUNZIP=1
+
 
 ui_print "==> 开始自定义安装: mihomoR"
 
 # -----------------------------
 # 1. 缓存目录处理
 # -----------------------------
-CACHE="$TMPDIR/mihomoR"
+CACHE="$TMPDIR"
 ui_print "准备缓存目录: $CACHE"
 if [ -d "$CACHE" ]; then
     rm -rf "$CACHE"
@@ -17,7 +17,7 @@ mkdir -p "$CACHE"
 # 2. 解压全部内容到缓存
 # -----------------------------
 ui_print "解压模块到缓存..."
-unzip -o "$ZIPFILE" -d "$CACHE" >/dev/null 2>&1
+unzip -o "$ZIPFILE" -d "$CACHE"
 if [ $? -ne 0 ]; then
     ui_print "警告: 解压 ZIP 失败"
 fi
@@ -28,7 +28,7 @@ fi
 APK_PATH="$CACHE/app-arm64-v8a-release.apk"
 if [ -f "$APK_PATH" ]; then
     ui_print "尝试安装 APK..."
-    pm install -r "$APK_PATH" >/dev/null 2>&1
+    pm install -r "$APK_PATH"
     if [ $? -eq 0 ]; then
         ui_print "APK 安装成功"
     else
@@ -50,21 +50,7 @@ else
         rm -rf "$MODPATH/metacubexd"
     fi
 
-    # 遍历缓存目录
-    for src in $(find "$CACHE" -type f -o -type d); do
-        relpath="${src#$CACHE/}"  # 相对路径
-        dst="$MODPATH/$relpath"
 
-        if [ -d "$src" ]; then
-            mkdir -p "$dst"
-        else
-            # yaml 文件保持不覆盖
-            if echo "$relpath" | grep -qiE '\.ya?ml$' && [ -f "$dst" ]; then
-                continue
-            fi
-            cp -f "$src" "$dst"
-        fi
-    done
 fi
 
 # -----------------------------
