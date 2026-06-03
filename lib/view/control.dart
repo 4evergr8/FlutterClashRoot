@@ -19,7 +19,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   String stopOutput = '--';
   String testOutput = '--';
   String checkOutput = '--';
-  String webuiUrl = 'http://127.0.0.1:9090/ui/#/proxies';
+  String webuiUrl = 'http://127.0.0.1:9090/ui';
 
   @override
   void initState() {
