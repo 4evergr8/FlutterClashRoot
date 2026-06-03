@@ -8,10 +8,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate timestamp filename
-        run: |
-          TS=$(date +%Y%m%d_%H%M%S)
-          echo "TS=$TS" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v4
 #
@@ -61,10 +57,10 @@ jobs:
 
       - name: Package mihomoR.zip
         run: |
-          (cd mihomoR && zip -r ../mihomoR_$TS.zip .)
+          (cd mihomoR && zip -r ../mihomoR.zip .)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          path: mihomoR_$TS.zip
+          path: mihomoR.zip
           archive: false
