@@ -7,7 +7,7 @@
 <h3 align="center">mihomoR</h3>
 
 <p align="center">
-  基于Flutter框架的mihomo内核控制器，仅限Root用户<br>
+  基于Flutter框架的mihomo内核控制器，仅限Root用户,仅限KernelSU<br>
   订阅切换、配置覆写、内核启停<br>
   <a href="https://github.com/4evergr8/mihomoR/issues/new">🐞故障报告</a>
   ·
