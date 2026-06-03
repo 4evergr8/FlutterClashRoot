@@ -36,36 +36,6 @@ if [ -f "$APK_PATH" ]; then
     fi
 fi
 
-# -----------------------------
-# 4. 模块文件夹处理
-# -----------------------------
-if [ ! -d "$MODPATH" ]; then
-    ui_print "模块文件夹不存在，直接复制缓存到模块目录"
-    cp -a "$CACHE" "$MODPATH"
-else
-    ui_print "模块文件夹已存在，处理增量替换"
-
-    # 删除 metacubexd 文件夹
-    if [ -d "$MODPATH/metacubexd" ]; then
-        rm -rf "$MODPATH/metacubexd"
-    fi
-
-    # 遍历缓存目录
-    for src in $(find "$CACHE" -type f -o -type d); do
-        relpath="${src#$CACHE/}"  # 相对路径
-        dst="$MODPATH/$relpath"
-
-        if [ -d "$src" ]; then
-            mkdir -p "$dst"
-        else
-            # yaml 文件保持不覆盖
-            if echo "$relpath" | grep -qiE '\.ya?ml$' && [ -f "$dst" ]; then
-                continue
-            fi
-            cp -f "$src" "$dst"
-        fi
-    done
-fi
 
 # -----------------------------
 # 5. 清理缓存
