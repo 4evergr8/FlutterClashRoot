@@ -32,14 +32,27 @@ if [ -f "$APK_PATH" ]; then
     if [ $? -eq 0 ]; then
         ui_print "APK 安装成功"
     else
-        ui_print "警告: APK 安装失败,请开启核心破解"
+        ui_print "警告: APK 安装失败"
     fi
 fi
 
 # -----------------------------
 # 4. 模块文件夹处理
 # -----------------------------
-[ -d "$MODPATH" ] && [ -d "$MODPATH/metacubexd" ] && rm -rf "$MODPATH/metacubexd" && ui_print "已删除 metacubexd 文件夹"
+if [ ! -d "$MODPATH" ]; then
+    ui_print "模块文件夹不存在，直接复制缓存到模块目录"
+    cp -a "$CACHE" "$MODPATH"
+else
+    ui_print "模块文件夹已存在，处理增量替换"
+
+    # 删除 metacubexd 文件夹
+    if [ -d "$MODPATH/metacubexd" ]; then
+        rm -rf "$MODPATH/metacubexd"
+    fi
+
+
+
+fi
 
 # -----------------------------
 # 5. 清理缓存
