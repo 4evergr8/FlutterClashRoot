@@ -25,7 +25,7 @@ fi
 # -----------------------------
 # 3. APK 安装
 # -----------------------------
-APK_PATH="$CACHE/app-release.apk"
+APK_PATH="$CACHE/app-arm64-v8a-release.apk"
 if [ -f "$APK_PATH" ]; then
     ui_print "尝试安装 APK..."
     pm install -r "$APK_PATH" >/dev/null 2>&1
