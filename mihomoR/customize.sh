@@ -50,8 +50,21 @@ else
         rm -rf "$MODPATH/metacubexd"
     fi
 
+    # 遍历缓存目录
+    for src in $(find "$CACHE" -type f -o -type d); do
+        relpath="${src#$CACHE/}"  # 相对路径
+        dst="$MODPATH/$relpath"
 
-
+        if [ -d "$src" ]; then
+            mkdir -p "$dst"
+        else
+            # yaml 文件保持不覆盖
+            if echo "$relpath" | grep -qiE '\.ya?ml$' && [ -f "$dst" ]; then
+                continue
+            fi
+            cp -f "$src" "$dst"
+        fi
+    done
 fi
 
 # -----------------------------
