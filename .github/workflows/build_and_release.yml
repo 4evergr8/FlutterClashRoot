@@ -19,8 +19,18 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK (arm64-v8a)
-        run: flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
+
+
+      - name: 上传 arm64-v8a APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-app-arm64-v8a
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+
+
+
 
       - name: Download GeoIP and Geosite
         run: |
@@ -28,7 +38,7 @@ jobs:
           curl -L -o mihomoR/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 
       - name: Copy APK to mihomoR
-        run: cp build/app/outputs/flutter-apk/app-release.apk mihomoR/
+        run: cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
 
       - name: Download latest stable Mihomo release
         run: |
@@ -60,4 +70,3 @@ jobs:
         with:
           name: mihomoR
           path: mihomoR.zip
-          retention-days: 5
