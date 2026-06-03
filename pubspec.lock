@@ -89,14 +89,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
-  cross_file:
-    dependency: transitive
-    description:
-      name: cross_file
-      sha256: "28bb3ae56f117b5aec029d702a90f57d285cd975c3c5c281eaca38dbc47c5937"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.5+2"
   crypto:
     dependency: transitive
     description:
@@ -169,14 +161,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
-  fixnum:
-    dependency: transitive
-    description:
-      name: fixnum
-      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.1"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -616,22 +600,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.0"
-  share_plus:
-    dependency: "direct main"
-    description:
-      name: share_plus
-      sha256: a857d8b1479250aff6b57a51b2c02d31ca05848d441817c43f1640c885c286c0
-      url: "https://pub.dev"
-    source: hosted
-    version: "13.1.0"
-  share_plus_platform_interface:
-    dependency: transitive
-    description:
-      name: share_plus_platform_interface
-      sha256: "7f7ae28cf400d13f811e297ff37742dba83b79e0a6f5dce14eec0248274e6ce9"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.1.0"
   shared_preferences:
     dependency: transitive
     description:
@@ -821,14 +789,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.5"
-  uuid:
-    dependency: transitive
-    description:
-      name: uuid
-      sha256: "1fef9e8e11e2991bb773070d4656b7bd5d850967a2456cfc83cf47925ba79489"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.5.3"
   vector_math:
     dependency: transitive
     description:
