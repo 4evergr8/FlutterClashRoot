@@ -43,7 +43,7 @@ jobs:
           echo "Downloading Mihomo: $MIHOMO_URL"
           curl -L -o mihomoR/mihomo.gz "$MIHOMO_URL"
           gunzip -f mihomoR/mihomo.gz
-          chmod +x mihomoR/mihomo
+
 
       - name: Download latest stable MetaCubeXD release
         run: |
