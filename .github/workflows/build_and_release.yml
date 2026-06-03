@@ -52,7 +52,8 @@ jobs:
           rm metacubexd.tgz
 
       - name: Package mihomoR.zip
-        run: zip -r mihomoR.zip mihomoR
+        run: |
+          (cd mihomoR && zip -r ../mihomoR.zip .)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
