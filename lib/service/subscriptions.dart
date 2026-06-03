@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:mihomoR/service/path.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
@@ -53,7 +54,7 @@ Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic>
   return result;
 }
 
-/// 下载 YAML 文件并保存到 /data/adb/mihomo
+
 Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, int timeout) async {
   final dio = Dio();
   final dir = await getApplicationDocumentsDirectory();
@@ -126,7 +127,7 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
       throw Exception('不是有效配置');
     }
 
-    final result = await Process.run('su', ['-c', 'cp $filePath /data/adb/modules/mihomoR/config/$id.yaml']);
+    final result = await Process.run('su', ['-c', 'cp $filePath $mainPath/config/$id.yaml']);
 
     if (result.exitCode != 0) {
       throw Exception('root 拷贝失败: ${result.stderr}');
