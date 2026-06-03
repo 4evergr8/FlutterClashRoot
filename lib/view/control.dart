@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mihomoR/service/control.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
 import 'package:mihomoR/widget.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,35 +15,19 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   @override
   bool get wantKeepAlive => false;
 
-  String startCmd = '--';
-  String stopCmd = '--';
-  String testCmd = '--';
-  String currentLog = '--';
-  String webuiUrl = '';
+  String startOutput = '--';
+  String stopOutput = '--';
+  String testOutput = '--';
+  String checkOutput = '--';
+  String webuiUrl = 'http://127.0.0.1:9090/ui/#/proxies';
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final settings = await readYamlAsMap(settingsPath);
-      setState(() {
-        startCmd = settings['start'] ?? '--';
-        stopCmd = settings['kill'] ?? '--';
-        testCmd = settings['test'] ?? '--';
-        webuiUrl = 'http://127.0.0.1:${settings['port'] ?? 9090}/ui/#/proxies';
-      });
-      await _runCheck();
-    } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    }
+    _runCheck();
   }
 
   Future<void> openWeb() async {
-    if (webuiUrl.isEmpty) return;
     final uri = Uri.parse(webuiUrl);
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
@@ -53,10 +35,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runCheck() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final log = await checkMihomo();
+      final result = await checkMihomo();
       if (!mounted) return;
       setState(() {
-        currentLog = log;
+        checkOutput = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -68,10 +50,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runTest() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final log = await testMihomo();
+      final result = await testMihomo();
       if (!mounted) return;
       setState(() {
-        currentLog = log;
+        testOutput = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -80,13 +62,13 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
     }
   }
 
-  Future<void> _restartMihomo() async {
+  Future<void> _startMihomo() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final log = await startMihomo();
+      final result = await startMihomo();
       if (!mounted) return;
       setState(() {
-        currentLog = log;
+        startOutput = result;
       });
       await QuickSettings.syncTile(
         Tile(
@@ -106,10 +88,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _stopMihomo() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final log = await stopMihomo();
+      final result = await stopMihomo();
       if (!mounted) return;
       setState(() {
-        currentLog = log;
+        stopOutput = result;
       });
       await QuickSettings.syncTile(
         Tile(
@@ -129,35 +111,44 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     return Scaffold(
       appBar: AppBar(title: const Text('控制')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 重启按钮 + 输出框
+            // 重启按钮 + 显示输出
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: _restartMihomo,
+                  onPressed: _startMihomo,
                   icon: const Icon(Icons.restart_alt_outlined),
                   label: const Text('重启'),
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(120, 50)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    minimumSize: const Size(120, 50),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(text: startCmd),
+                    controller: TextEditingController(text: startOutput),
                     readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.all(8),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
 
-            // 停止按钮 + 输出框
+            // 停止按钮 + 显示输出
             Row(
               children: [
                 ElevatedButton.icon(
@@ -173,17 +164,21 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(text: stopCmd),
+                    controller: TextEditingController(text: stopOutput),
                     readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                    maxLines: null,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.all(8),
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-            // 测试和 WEBUI 按钮并排
+            // 测试和 WEBUI 按钮并排，没有显示框
             Row(
               children: [
                 Expanded(
@@ -191,6 +186,11 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     onPressed: _runTest,
                     icon: const Icon(Icons.bug_report),
                     label: const Text('测试'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size(120, 50),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -199,19 +199,48 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     onPressed: openWeb,
                     icon: const Icon(Icons.language),
                     label: const Text('WEBUI'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size(120, 50),
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // 输出框显示当前日志
-            TextField(
-              controller: TextEditingController(text: currentLog),
-              readOnly: true,
-              maxLines: null,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer),
-              decoration: InputDecoration(border: OutlineInputBorder(), contentPadding: const EdgeInsets.all(8)),
+            // 显示框，显示 check 输出
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Stack(
+                children: [
+                  TextField(
+                    controller: TextEditingController(text: checkOutput),
+                    readOnly: true,
+                    maxLines: null,
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: EdgeInsets.all(8),
+                    ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.refresh),
+                      color: Theme.of(context).colorScheme.primary,
+                      onPressed: _runCheck,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
