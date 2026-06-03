@@ -1,5 +1,6 @@
-final String subscriptionsPath = '/data/adb/modules/mihomoR/subscriptions.yaml';
-final String configPath = '/data/adb/modules/mihomoR/config.yaml';
-final String settingsPath = '/data/adb/modules/mihomoR/settings.yaml';
-final String overridePath = '/data/adb/modules/mihomoR/override.yaml';
-final String scriptPath = '/data/adb/modules/mihomoR/boot-completed.sh';
+final String mainPath='/data/adb/modules/mihomoR';
+final String subscriptionsPath = '$mainPath/subscriptions.yaml';
+final String configPath = '$mainPath/config.yaml';
+final String settingsPath = '$mainPath/settings.yaml';
+final String overridePath = '$mainPath/override.yaml';
+final String scriptPath = '$mainPath/boot-completed.sh';
