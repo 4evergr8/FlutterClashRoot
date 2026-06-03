@@ -1,5 +1,5 @@
 #!/system/bin/sh
-SKIPUNZIP=1
+
 
 ui_print "==> 开始自定义安装: mihomoR"
 
@@ -25,17 +25,27 @@ fi
 # -----------------------------
 # 3. APK 安装
 # -----------------------------
-APK_PATH="$CACHE/app-arm64-v8a-release.apk"
+APK_PATH="$CACHE/app-release.apk"
 if [ -f "$APK_PATH" ]; then
     ui_print "尝试安装 APK..."
     pm install -r "$APK_PATH" >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         ui_print "APK 安装成功"
     else
-        ui_print "警告: APK 安装失败"
+        ui_print "警告: APK 安装失败,请开启核心破解"
     fi
 fi
 
+# -----------------------------
+# 4. 模块文件夹处理
+# -----------------------------
+if [  -d "$MODPATH" ]; then
+     ui_print "模块文件夹已存在，处理增量替换"
+        # 删除 metacubexd 文件夹
+        if [ -d "$MODPATH/metacubexd" ]; then
+            rm -rf "$MODPATH/metacubexd"
+        fi
+fi
 
 # -----------------------------
 # 5. 清理缓存
