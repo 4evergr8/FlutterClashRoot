@@ -12,8 +12,10 @@ Future<String> stopMihomo() async {
 Future<String> startMihomo() async {
   await Process.run("su", ["-c", "sh $scriptPath kill"]);
 
-  final result = await Process.run("su", ["-c", "sh $scriptPath start"]);
-  return result.stdout.toString().trim() + result.stderr.toString();
+  final process = await Process.start("sh", ["-c", "nohup ./mihomo &"]);
+  process.stdout.drain();
+  process.stderr.drain();
+  return "启动完毕";
 }
 
 /// test 分支
