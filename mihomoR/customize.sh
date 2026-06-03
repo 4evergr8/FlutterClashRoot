@@ -39,17 +39,14 @@ fi
 # -----------------------------
 # 4. 模块文件夹处理
 # -----------------------------
-if [ ! -d "$MODPATH" ]; then
-    ui_print "模块文件夹不存在，直接复制缓存到模块目录"
-    cp -a "$CACHE" "$MODPATH"
-else
-    ui_print "模块文件夹已存在，处理增量替换"
 
-    # 删除 metacubexd 文件夹
-    if [ -d "$MODPATH/metacubexd" ]; then
-        rm -rf "$MODPATH/metacubexd"
-    fi
+
+# 删除 metacubexd 文件夹
+if [ -d "$MODPATH/metacubexd" ]; then
+    rm -rf "$MODPATH/metacubexd"
+    ui_print "删除metacubexd文件夹"
 fi
+
 
 # -----------------------------
 # 5. 清理缓存
