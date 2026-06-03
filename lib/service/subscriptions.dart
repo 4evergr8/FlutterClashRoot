@@ -126,7 +126,7 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
       throw Exception('不是有效配置');
     }
 
-    final result = await Process.run('su', ['-c', 'cp $filePath /data/adb/mihomo/config/$id.yaml && chmod 777 /data/adb/mihomo/config/$id.yaml']);
+    final result = await Process.run('su', ['-c', 'cp $filePath /data/adb/modules/mihomoR/config/$id.yaml']);
 
     if (result.exitCode != 0) {
       throw Exception('root 拷贝失败: ${result.stderr}');
