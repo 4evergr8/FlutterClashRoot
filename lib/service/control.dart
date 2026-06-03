@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
+
 
 Future<void> stopMihomo() async {
   await Process.run("sh", [scriptPath, "kill"]);
