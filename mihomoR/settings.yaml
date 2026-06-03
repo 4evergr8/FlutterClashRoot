@@ -1,0 +1,24 @@
+ua: "clash.meta"
+#下载订阅时使用的User-Agent
+port: 9090
+#软件打开的控制端口,需要和配置中的端口对应
+timeout: 5000
+#下载订阅超时,毫秒
+url: "https://www.google.com"
+#节点测速链接
+testtimeout: 2000
+#节点测速超时,毫秒
+interval: 1000
+#通知网速刷新间隔,毫秒
+
+
+
+
+
+
+
+
+
+
+
+
