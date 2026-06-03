@@ -103,7 +103,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     try {
       final settings = await readYamlAsMap(settingsPath);
       final port = settings['port'];
-      final base = await readYamlAsMap("/data/adb/mihomo/config/$id.yaml");
+      final base = await readYamlAsMap("$mainPath/config/$id.yaml");
       final override = await readYamlAsMap(overridePath);
       final yaml = overrideMap(base, override);
       await writeYamlFromMap(yaml, configPath);
@@ -227,7 +227,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       subscriptions.removeWhere((s) => s['id'] == sub['id']);
       final data = {'subscriptions': subscriptions};
       await writeYamlFromMap(data, subscriptionsPath);
-      await Process.run('su', ['-c', 'rm -f /data/adb/mihomo/config/${sub['id']}.yaml']);
+      await Process.run('su', ['-c', 'rm -f $mainPath/config/${sub['id']}.yaml']);
       if (sub['select'] == true && subscriptions.isNotEmpty) {
         subscriptions.first['select'] = true;
       }
