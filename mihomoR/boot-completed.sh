@@ -3,6 +3,11 @@
 MIHOMO_DIR="/data/adb/modules/mihomoR"
 MIHOMO_BIN="./mihomo"
 
+for FILE in override.yaml settings.yaml subscriptions.yaml; do
+    if [ ! -f "$MIHOMO_DIR/$FILE" ] && [ -f "$MIHOMO_DIR/config/$FILE" ]; then
+        cp "$MIHOMO_DIR/config/$FILE" "$MIHOMO_DIR/$FILE"
+    fi
+done
 # 命令字符串变量
 START_CMD="cd $MIHOMO_DIR && chmod +x $MIHOMO_BIN && nohup setsid $MIHOMO_BIN -d . >$MIHOMO_DIR/mihomo.log 2>&1 &"
 KILL_CMD="killall mihomo >/dev/null 2>&1"
