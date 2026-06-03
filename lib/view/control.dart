@@ -27,7 +27,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _loadSettings() async {
     final settings = await readYamlAsMap(settingsPath);
-    if (!mounted) return;
 
     setState(() {
       webuiUrl = 'http://127.0.0.1:${settings['port'] ?? 9090}/ui/#/proxies';
@@ -45,10 +44,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runCheck() async {
     try {
       await checkMihomo();
-      if (!mounted) return;
-      setState(() {
-        currentLog = 'check 命令已执行，请查看日志文件';
-      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -60,10 +55,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runTest() async {
     try {
       await testMihomo();
-      if (!mounted) return;
-      setState(() {
-        currentLog = 'test 命令已执行，请查看日志文件';
-      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -82,7 +73,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 重启按钮
             Row(
               children: [
                 ElevatedButton.icon(
@@ -98,23 +88,14 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     );
                   },
                   icon: const Icon(Icons.restart_alt_outlined),
-                  label: const Text('重启'),
+                  label: const Text("重启"),
                   style: ElevatedButton.styleFrom(minimumSize: const Size(120, 50)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: TextEditingController(text: 'start/restart mihomo'),
-                    readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
 
-            // 停止按钮
             Row(
               children: [
                 ElevatedButton.icon(
@@ -130,67 +111,44 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     );
                   },
                   icon: const Icon(Icons.stop),
-                  label: const Text('停止'),
-                  style: ElevatedButton.styleFrom(minimumSize: const Size(120, 50)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: TextEditingController(text: 'stop mihomo'),
-                    readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+                  label: const Text("停止"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                    minimumSize: const Size(120, 50),
                   ),
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
 
-            // 测试按钮
             Row(
               children: [
                 ElevatedButton.icon(
                   onPressed: _runTest,
                   icon: const Icon(Icons.bug_report),
-                  label: const Text('测试'),
+                  label: const Text("测试"),
                   style: ElevatedButton.styleFrom(minimumSize: const Size(120, 50)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: TextEditingController(text: '执行 test 命令'),
-                    readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
 
-            // WEBUI 按钮
             Row(
               children: [
                 ElevatedButton.icon(
                   onPressed: openWeb,
                   icon: const Icon(Icons.language),
-                  label: const Text('WEBUI'),
+                  label: const Text("WEBUI"),
                   style: ElevatedButton.styleFrom(minimumSize: const Size(120, 50)),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: TextEditingController(text: webuiUrl),
-                    readOnly: true,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: InputDecoration(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
-                  ),
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
 
-            // 日志显示
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -213,11 +171,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                   Positioned(
                     top: 0,
                     right: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.refresh),
-                      color: Theme.of(context).colorScheme.primary,
-                      onPressed: _runCheck,
-                    ),
+                    child: IconButton(icon: const Icon(Icons.refresh), onPressed: _runCheck),
                   ),
                 ],
               ),
