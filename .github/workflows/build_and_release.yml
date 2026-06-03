@@ -24,27 +24,12 @@ jobs:
       - name: 获取依赖
         run: flutter pub get
 
-      - name: 构建 APK (按 ABI 分割)
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
-
+      - name: 构建 APK (仅 arm64-v8a)
+        run: flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons
 
       - name: 上传 arm64-v8a APK
         uses: actions/upload-artifact@v4
         with:
           name: flutter-app-arm64-v8a
           path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-          retention-days: 5
-
-      - name: 上传 armeabi-v7a APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-app-armeabi-v7a
-          path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-          retention-days: 5
-
-      - name: 上传 x86_64 APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: flutter-app-x86_64
-          path: build/app/outputs/flutter-apk/app-x86_64-release.apk
           retention-days: 5
