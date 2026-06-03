@@ -17,7 +17,7 @@ mkdir -p "$CACHE"
 # 2. 解压全部内容到缓存
 # -----------------------------
 ui_print "解压模块到缓存..."
-unzip -o "$ZIPFILE" -d "$CACHE"
+unzip -o "$ZIPFILE" -d "$CACHE" >/dev/null 2>&1
 if [ $? -ne 0 ]; then
     ui_print "警告: 解压 ZIP 失败"
 fi
@@ -28,7 +28,7 @@ fi
 APK_PATH="$CACHE/app-arm64-v8a-release.apk"
 if [ -f "$APK_PATH" ]; then
     ui_print "尝试安装 APK..."
-    pm install -r "$APK_PATH"
+    pm install -r "$APK_PATH" >/dev/null 2>&1
     if [ $? -eq 0 ]; then
         ui_print "APK 安装成功"
     else
@@ -49,8 +49,6 @@ else
     if [ -d "$MODPATH/metacubexd" ]; then
         rm -rf "$MODPATH/metacubexd"
     fi
-
-
 fi
 
 # -----------------------------
