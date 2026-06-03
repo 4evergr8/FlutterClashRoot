@@ -1,5 +1,5 @@
 #!/system/bin/sh
-
+SKIPUNZIP=1
 
 ui_print "==> 开始自定义安装: mihomoR"
 
@@ -39,13 +39,7 @@ fi
 # -----------------------------
 # 4. 模块文件夹处理
 # -----------------------------
-if [  -d "$MODPATH" ]; then
-     ui_print "模块文件夹已存在，处理增量替换"
-        # 删除 metacubexd 文件夹
-        if [ -d "$MODPATH/metacubexd" ]; then
-            rm -rf "$MODPATH/metacubexd"
-        fi
-fi
+[ -d "$MODPATH" ] && [ -d "$MODPATH/metacubexd" ] && rm -rf "$MODPATH/metacubexd" && ui_print "已删除 metacubexd 文件夹"
 
 # -----------------------------
 # 5. 清理缓存
