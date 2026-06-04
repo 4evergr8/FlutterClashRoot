@@ -4,9 +4,9 @@ external-ui: ./metacubexd
 allow-lan: false
 log-level: warning
 ipv6: true
-keep-alive-idle: 0
-keep-alive-interval: 30
-disable-keep-alive: true
+keep-alive-idle: 15
+keep-alive-interval: 10
+disable-keep-alive: false
 unified-delay: true
 tcp-concurrent: true
 geodata-loader: memconservative
@@ -18,7 +18,9 @@ geodata-mode: true
 geox-url:
   geoip: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
   geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-
+profile:
+  store-selected: false
+  store-fake-ip: true
 
 tun:
   enable: true
@@ -27,6 +29,7 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
+
 
 
 dns:
@@ -49,8 +52,3 @@ dns:
   nameserver:
     - https://dns.alidns.com/dns-query#h3=true
     - https://doh.pub/dns-query
-  proxy-server-nameserver:
-    - https://cloudflare-dns.com/dns-query#h3=true
-    - https://dns.google/dns-query#h3=true
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
