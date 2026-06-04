@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mihomoR/service/notification.dart';
 import 'package:mihomoR/service/tile.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
@@ -9,8 +10,9 @@ import 'widget.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   QuickSettings.setup(
     onTileClicked: onTileClicked,
