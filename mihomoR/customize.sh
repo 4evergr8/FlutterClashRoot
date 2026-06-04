@@ -1,55 +1,23 @@
 #!/system/bin/sh
+SKIPUNZIP=1
 
+ui_print "==> 打印 KernelSU 内置变量"
 
-ui_print "==> 开始自定义安装: mihomoR"
+# 布尔值/路径/版本信息
+ui_print "KSU=$KSU"
+ui_print "KSU_VER=$KSU_VER"
+ui_print "KSU_VER_CODE=$KSU_VER_CODE"
+ui_print "KSU_KERNEL_VER_CODE=$KSU_KERNEL_VER_CODE"
+ui_print "BOOTMODE=$BOOTMODE"
+ui_print "MODPATH=$MODPATH"
+ui_print "TMPDIR=$TMPDIR"
+ui_print "ZIPFILE=$ZIPFILE"
+ui_print "ARCH=$ARCH"
+ui_print "IS64BIT=$IS64BIT"
+ui_print "API=$API"
 
-# -----------------------------
-# 1. 缓存目录处理
-# -----------------------------
-CACHE="$TMPDIR"
-ui_print "准备缓存目录: $CACHE"
-if [ -d "$CACHE" ]; then
-    rm -rf "$CACHE"
-fi
-mkdir -p "$CACHE"
+# Magisk 兼容变量（KernelSU 内固定值）
+ui_print "MAGISK_VER_CODE=$MAGISK_VER_CODE"
+ui_print "MAGISK_VER=$MAGISK_VER"
 
-# -----------------------------
-# 2. 解压全部内容到缓存
-# -----------------------------
-ui_print "解压模块到缓存..."
-unzip -o "$ZIPFILE" -d "$CACHE" >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-    ui_print "警告: 解压 ZIP 失败"
-fi
-
-# -----------------------------
-# 3. APK 安装
-# -----------------------------
-APK_PATH="$CACHE/app-arm64-v8a-release.apk"
-if [ -f "$APK_PATH" ]; then
-    ui_print "尝试安装 APK..."
-    pm install -r "$APK_PATH" >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        ui_print "APK 安装成功"
-    else
-        ui_print "警告: APK 安装失败"
-    fi
-fi
-
-# -----------------------------
-# 4. 模块文件夹处理
-# -----------------------------
-
-
-# 删除 metacubexd 文件夹
-if [ -d "$MODPATH/metacubexd" ]; then
-    rm -rf "$MODPATH/metacubexd"
-    ui_print "删除metacubexd文件夹"
-fi
-
-
-# -----------------------------
-# 5. 清理缓存
-# -----------------------------
-rm -rf "$CACHE"
-ui_print "自定义安装完成"
+ui_print "==> 打印完成"
