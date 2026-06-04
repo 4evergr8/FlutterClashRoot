@@ -6,7 +6,7 @@ MIHOMO_BIN="./mihomo"
 # 命令字符串变量
 START_CMD="cd $MIHOMO_DIR && chmod +x $MIHOMO_BIN && nohup setsid $MIHOMO_BIN -d . >$MIHOMO_DIR/mihomo.log 2>&1 &"
 KILL_CMD="killall mihomo >/dev/null 2>&1"
-TEST_CMD="cd $MIHOMO_DIR && chmod +x $MIHOMO_BIN && $MIHOMO_BIN -d ."
+TEST_CMD="cd $MIHOMO_DIR && chmod +x $MIHOMO_BIN && $MIHOMO_BIN -t -d ."
 CHECK_CMD="ps -p \$(pidof mihomo) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof mihomo)/status"
 
 CMD="$1"
