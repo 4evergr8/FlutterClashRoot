@@ -10,23 +10,23 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-#
-#      - name: Set up Flutter
-#        uses: subosito/flutter-action@v2
-#        with:
-#          flutter-version: '3.44.1'
-#
-#      - name: Get dependencies
-#        run: flutter pub get
-#
-#      - name: Build APK (按 ABI 分割)
-#        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
-#
-#      - name: 上传 arm64-v8a APK
-#        uses: actions/upload-artifact@v7
-#        with:
-#          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-#          archive: false
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.1'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build APK (按 ABI 分割)
+        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
+
+      - name: 上传 arm64-v8a APK
+        uses: actions/upload-artifact@v7
+        with:
+          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          archive: false
 
       - name: Download GeoIP and Geosite
         run: |
@@ -34,8 +34,8 @@ jobs:
           curl -L -o mihomoR/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
           curl -L -o mihomoR/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 
-#      - name: Copy APK to mihomoR
-#        run: cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
+      - name: Copy APK to mihomoR
+        run: cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
 
       - name: Download latest stable Mihomo release
         run: |
