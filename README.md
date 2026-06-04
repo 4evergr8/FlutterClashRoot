@@ -7,7 +7,7 @@
 <h3 align="center">mihomoR</h3>
 
 <p align="center">
-  基于Flutter框架的mihomo内核控制器，仅限Root用户,仅限KernelSU<br>
+  基于Flutter框架的mihomo内核控制器,仅限KernelSU<br>
   订阅切换、配置覆写、内核启停<br>
   <a href="https://github.com/4evergr8/mihomoR/issues/new">🐞故障报告</a>
   ·
@@ -49,24 +49,17 @@
 </table>
 ## 食用方法
 
-1. 前往[Release](https://github.com/4evergr8/mihomoR/releases)下载对应架构的APK和mihomo.zip
-2. 安装APK并授予Root权限，解压mihomo.zip到data/adb文件夹下，确保mihomo核心位于/data/adb/mihomo/mihomo
-3. 添加订阅并启动核心
-4. 前往WebUI观察运行情况
+1. 前往[Release](https://github.com/4evergr8/mihomoR/releases)下载对应架构的APK和mihomoR.zip
+2. 在KernelSU内安装mihomoR.zip,授予mihomoR应用root权限,重启设备
+3. 由于每次构建会生成不同的签名,只有开启核心破解后才能更新app,无法更新请前往模块目录手动安装apk
+4. 添加订阅,选中订阅后重启核心
+5. 前往WebUI观察运行情况
 
 ## 配置文件
 
 ### settings.yaml 软件设置
 
 ```yaml
-start: "su -c 'cd /data/adb/mihomo && chmod +x ./mihomo && nohup setsid ./mihomo -d . >/dev/null 2>&1 &'"
-#mihomo启动命令
-kill: "su -c 'killall mihomo'"
-#mihomo停止命令
-test: "su -c 'cd /data/adb/mihomo && chmod +x ./mihomo &&./mihomo -d .'"
-#mihomo测试命令
-check: "su -c 'ps -p $(pidof mihomo) -o pid,ppid,%cpu,%mem,cmd; cat /proc/$(pidof mihomo)/status'"
-#查看mihomo状态
 ua: "clash.meta"
 #下载订阅时使用的User-Agent
 port: 9090
@@ -141,38 +134,6 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
-  include-package:
-    - "a.forevergreat.atoolbox"
-    - "com.google.android.apps.authenticator2"
-    - "com.radolyn.ayugram"
-    - "com.x8bit.bitwarden"
-    - "com.openai.chatgpt"
-    - "com.android.chrome"
-    - "com.follow.clash"
-    - "com.google.android.inputmethod.latin"
-    - "com.android.vending"
-    - "com.google.android.gms"
-    - "com.google.android.gsf"
-    - "ai.x.grok"
-    - "com.google.android.keep"
-    - "me.weishu.kernelsu"
-    - "a.forevergreat.mihomoroot"
-    - "com.mixplorer"
-    - "com.piyush.music"
-    - "com.microsoft.office.outlook"
-    - "com.github.pacalini.pica_comic"
-    - "com.pikcloud.pikpak"
-    - "me.ash.reader"
-    - "io.github.chsbuffer.revancedxposed"
-    - "ru.dahl.messenger"
-    - "com.termux"
-    - "org.telegram.group"
-    - "com.google.android.youtube"
-    - "com.google.android.apps.youtube.music"
-    - "com.binance.dev"
-    - "im.fdx.v2ex"
-    - "com.google.android.apps.photos"
-    - "org.adaway"
 
 
 dns:
