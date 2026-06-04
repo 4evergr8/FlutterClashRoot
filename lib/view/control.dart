@@ -17,8 +17,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   String startOutput = '--';
   String stopOutput = '--';
-  String testOutput = '--';
-  String checkOutput = '--';
+  String displayOutput = '--';
   String webuiUrl = 'http://127.0.0.1:9090/ui';
 
   @override
@@ -38,7 +37,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await checkMihomo();
       if (!mounted) return;
       setState(() {
-        checkOutput = result;
+        displayOutput = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -53,7 +52,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await testMihomo();
       if (!mounted) return;
       setState(() {
-        testOutput = result;
+        displayOutput = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -220,7 +219,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
               child: Stack(
                 children: [
                   TextField(
-                    controller: TextEditingController(text: checkOutput),
+                    controller: TextEditingController(text: displayOutput),
                     readOnly: true,
                     maxLines: null,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer),
