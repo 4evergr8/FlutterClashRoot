@@ -1,6 +1,6 @@
 id=mihomoR
 name=mihomoR
-version=1.0.0
-versionCode=1
+version=2.1.0
+versionCode=10
 author=4evergr8
 description=基于Flutter框架的mihomo内核控制器，仅限Root用户,仅限KernelSU
