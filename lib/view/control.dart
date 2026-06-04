@@ -15,15 +15,30 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   @override
   bool get wantKeepAlive => false;
 
-  String startOutput = '--';
-  String stopOutput = '--';
-  String displayOutput = '--';
+  // 1. 声明持久化的 Controller
+  late final TextEditingController _startController;
+  late final TextEditingController _stopController;
+  late final TextEditingController _displayController;
+
   String webuiUrl = 'http://127.0.0.1:9090/ui';
 
   @override
   void initState() {
     super.initState();
+    // 2. 在 initState 中初始化并赋予初始值
+    _startController = TextEditingController(text: '--');
+    _stopController = TextEditingController(text: '--');
+    _displayController = TextEditingController(text: '--');
     _runCheck();
+  }
+
+  @override
+  void dispose() {
+    // 3. 必须在 dispose 中销毁所有控制器，防止内存泄漏
+    _startController.dispose();
+    _stopController.dispose();
+    _displayController.dispose();
+    super.dispose();
   }
 
   Future<void> openWeb() async {
@@ -37,7 +52,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await checkMihomo();
       if (!mounted) return;
       setState(() {
-        displayOutput = result;
+        // 4. 更新文本时，直接修改 text 属性
+        _displayController.text = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -52,7 +68,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await testMihomo();
       if (!mounted) return;
       setState(() {
-        displayOutput = result;
+        _displayController.text = result;
       });
     } catch (e) {
       showErrorSnackBarGlobal('$e');
@@ -67,7 +83,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await startMihomo();
       if (!mounted) return;
       setState(() {
-        startOutput = result;
+        _startController.text = result;
       });
       await QuickSettings.syncTile(
         Tile(
@@ -90,7 +106,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       final result = await stopMihomo();
       if (!mounted) return;
       setState(() {
-        stopOutput = result;
+        _stopController.text = result;
       });
       await QuickSettings.syncTile(
         Tile(
@@ -133,7 +149,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(text: startOutput),
+                    controller: _startController, // 5. 绑定持久化实例
                     readOnly: true,
                     maxLines: null,
                     decoration: InputDecoration(
@@ -163,7 +179,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextField(
-                    controller: TextEditingController(text: stopOutput),
+                    controller: _stopController, // 5. 绑定持久化实例
                     readOnly: true,
                     maxLines: null,
                     decoration: InputDecoration(
@@ -177,7 +193,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             ),
             const SizedBox(height: 12),
 
-            // 测试和 WEBUI 按钮并排，没有显示框
+            // 测试和 WEBUI 按钮并排
             Row(
               children: [
                 Expanded(
@@ -209,7 +225,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             ),
             const SizedBox(height: 20),
 
-            // 显示框，显示 check 输出
+            // 显示框
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -219,7 +235,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
               child: Stack(
                 children: [
                   TextField(
-                    controller: TextEditingController(text: displayOutput),
+                    controller: _displayController,
+                    // 5. 绑定持久化实例
                     readOnly: true,
                     maxLines: null,
                     style: TextStyle(color: Theme.of(context).colorScheme.onSecondaryContainer),
