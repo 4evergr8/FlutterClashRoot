@@ -113,8 +113,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
     super.build(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('控制'),
-        backgroundColor: Theme.of(context).colorScheme.surface),
+      appBar: AppBar(title: const Text('控制')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
