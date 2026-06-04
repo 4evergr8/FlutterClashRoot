@@ -27,38 +27,6 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
-  include-package:
-    - "a.forevergreat.atoolbox"
-    - "com.google.android.apps.authenticator2"
-    - "com.radolyn.ayugram"
-    - "com.x8bit.bitwarden"
-    - "com.openai.chatgpt"
-    - "com.android.chrome"
-    - "com.follow.clash"
-    - "com.google.android.inputmethod.latin"
-    - "com.android.vending"
-    - "com.google.android.gms"
-    - "com.google.android.gsf"
-    - "ai.x.grok"
-    - "com.google.android.keep"
-    - "me.weishu.kernelsu"
-    - "a.forevergreat.mihomoroot"
-    - "com.mixplorer"
-    - "com.piyush.music"
-    - "com.microsoft.office.outlook"
-    - "com.github.pacalini.pica_comic"
-    - "com.pikcloud.pikpak"
-    - "me.ash.reader"
-    - "io.github.chsbuffer.revancedxposed"
-    - "ru.dahl.messenger"
-    - "com.termux"
-    - "org.telegram.group"
-    - "com.google.android.youtube"
-    - "com.google.android.apps.youtube.music"
-    - "com.binance.dev"
-    - "im.fdx.v2ex"
-    - "com.google.android.apps.photos"
-    - "org.adaway"
 
 
 dns:
