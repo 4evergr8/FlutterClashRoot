@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'dart:ui';
+
+import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
 /// =======================
-/// 全局配置（无默认值）
+/// 全局配置
 /// =======================
 int port = 9090;
 
@@ -22,7 +25,7 @@ class TrafficState {
 }
 
 /// =======================
-/// WS（独立的网络监听循环）
+/// WS 管理
 /// =======================
 class WsManager {
   WebSocket? _ws;
@@ -39,19 +42,14 @@ class WsManager {
     _ws!.messages.listen(
           (event) {
         final data = jsonDecode(event);
-
         state.up = data['up'] ?? 0;
         state.down = data['down'] ?? 0;
         state.upTotal = data['upTotal'] ?? 0;
         state.downTotal = data['downTotal'] ?? 0;
         state.connected = true;
       },
-      onError: (_) {
-        state.connected = false;
-      },
-      onDone: () {
-        state.connected = false;
-      },
+      onError: (_) => state.connected = false,
+      onDone: () => state.connected = false,
     );
   }
 
@@ -62,118 +60,149 @@ class WsManager {
 }
 
 /// =======================
-/// Foreground Task Handler
+/// 通知配置
 /// =======================
-class MyTaskHandler extends TaskHandler {
-  final TrafficState state = TrafficState();
-  late final WsManager ws;
+const String notificationChannelId = 'mihomo_channel';
+const int notificationId = 888;
 
-  // 标志位，确保在配置未读取完成前，定时循环不执行错误逻辑
-  bool _isInitialized = false;
+/// =======================
+/// 启动服务（包含初始化）
+/// =======================
+Future<void> startMonitorService() async {
+  final service = FlutterBackgroundService();
 
-  /// =======================
-  /// 后台进程启动时，自己读取文件配置
-  /// =======================
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    try {
-      // 1. 独立在后台进程中读取 YAML 配置文件
-      final settings = await readYamlAsMap(settingsPath);
+  // ==================== 初始化部分（只执行一次） ====================
+  if (!await service.isRunning()) {
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
-      // 2. 赋值全局变量 port
-      port = settings['port'];
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      notificationChannelId,
+      'mihomo 核心监控',
+      description: '用于展示核心流量与连接状态的前台服务通知',
+      importance: Importance.low,
+    );
 
-      // 3. 初始化并启动 WebSocket 连接
-      ws = WsManager(state);
-      ws.connect();
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
 
-      // 4. 标记初始化完成
-      _isInitialized = true;
-    } catch (e) {
-      // 错误处理：如果文件读取失败，可以在这里捕获
-      _isInitialized = false;
-    }
+    await service.configure(
+      androidConfiguration: AndroidConfiguration(
+        onStart: onStart,
+        autoStart: false,
+        isForegroundMode: true,
+        notificationChannelId: notificationChannelId,
+        initialNotificationTitle: 'mihomo 网速监控',
+        initialNotificationContent: '准备监控...',
+        foregroundServiceNotificationId: notificationId,
+        foregroundServiceTypes: [AndroidForegroundType.dataSync],
+      ),
+      iosConfiguration: IosConfiguration(
+        autoStart: false,
+        onForeground: onStart,
+      ),
+    );
   }
 
-  /// =======================
-  /// 独立的前端刷新循环（死等1000ms周期）
-  /// =======================
-  @override
-  void onRepeatEvent(DateTime timestamp) {
-    // 如果后台还未读取完配置文件，显示正在初始化
-    if (!_isInitialized) {
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'mihomo 网速监控',
-        notificationText: '正在读取核心配置...',
+  // ==================== 启动服务 ====================
+  bool isRunning = await service.isRunning();
+  if (!isRunning) {
+    await service.startService();
+  }
+}
+
+/// =======================
+/// 后台入口
+/// =======================
+@pragma('vm:entry-point')
+void onStart(ServiceInstance service) async {
+  DartPluginRegistrant.ensureInitialized();
+
+  final TrafficState state = TrafficState();
+  late final WsManager ws;
+  bool isInitialized = false;
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  // 读取配置并启动 WS
+  try {
+    final settings = await readYamlAsMap(settingsPath);
+    port = settings['port'] ?? 9090;
+
+    ws = WsManager(state);
+    ws.connect();
+    isInitialized = true;
+  } catch (e) {
+    isInitialized = false;
+  }
+
+  // 定时更新通知（每1秒），通知会一直存在
+  Timer.periodic(const Duration(seconds: 1), (timer) async {
+    if (!isInitialized) {
+      await flutterLocalNotificationsPlugin.show(
+        notificationId,
+        'mihomo 网速监控',
+        '正在读取核心配置...',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            notificationChannelId,
+            'mihomo 核心监控',
+            icon: 'ic_bg_service_small',
+            ongoing: true,           // 关键：保持通知常驻
+            autoCancel: false,
+          ),
+        ),
       );
       return;
     }
 
     if (state.connected) {
-      final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
-      final String totalText = '总上传: ${formatTotal(state.upTotal)}  总下载: ${formatTotal(state.downTotal)}';
+      final String speedText = '↑ ${formatSpeed(state.up)} ↓ ${formatSpeed(state.down)}';
+      final String totalText = '总上传: ${formatTotal(state.upTotal)} 总下载: ${formatTotal(state.downTotal)}';
 
-      FlutterForegroundTask.updateService(
-        notificationTitle: speedText,
-        notificationText: totalText,
+      await flutterLocalNotificationsPlugin.show(
+        notificationId,
+        speedText,
+        totalText,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            notificationChannelId,
+            'mihomo 核心监控',
+            icon: 'ic_bg_service_small',
+            ongoing: true,
+            autoCancel: false,
+          ),
+        ),
       );
     } else {
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'mihomo 网速监控',
-        notificationText: '正在连接核心...',
+      await flutterLocalNotificationsPlugin.show(
+        notificationId,
+        'mihomo 网速监控',
+        '正在连接核心...',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            notificationChannelId,
+            'mihomo 核心监控',
+            icon: 'ic_bg_service_small',
+            ongoing: true,
+            autoCancel: false,
+          ),
+        ),
       );
     }
-  }
+  });
 
-  @override
-  Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    // 只有初始化成功了，才需要关闭 ws
-    if (_isInitialized) {
-      ws.close();
-    }
-  }
-}
-
-
-/// =======================
-/// entry point
-/// =======================
-@pragma('vm:entry-point')
-void startCallback() {
-  FlutterForegroundTask.setTaskHandler(MyTaskHandler());
+  // 可选：停止服务
+  service.on('stopService').listen((event) {
+    ws.close();
+    service.stopSelf();
+  });
 }
 
 /// =======================
-/// 启动服务
-/// =======================
-void startMonitorService() async {
-  // 1. 初始化配置
-  FlutterForegroundTask.init(
-    androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'mihomo_channel',
-      channelName: 'mihomo 核心监控',
-      channelDescription: '用于展示核心流量与连接状态的前台服务通知',
-      channelImportance: NotificationChannelImportance.LOW,
-      priority: NotificationPriority.LOW,
-    ),
-    foregroundTaskOptions: ForegroundTaskOptions(
-      autoRunOnBoot: false,
-      allowWakeLock: true,
-      eventAction: ForegroundTaskEventAction.repeat(1000), // 固定 1000ms 周期
-    ),
-    iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
-  );
-
-  // 2. 直接启动服务即可，不需要 withReceivePort，也不需要 sendDataToTask
-  await FlutterForegroundTask.startService(
-    notificationTitle: '服务已启动',
-    notificationText: '准备监控...',
-    callback: startCallback,
-  );
-}
-
-/// =======================
-/// 网速格式化（B/s -> KB/s 或 MB/s）
+/// 格式化函数（保持不变）
 /// =======================
 String formatSpeed(int bytesPerSecond) {
   double value = bytesPerSecond.toDouble();
@@ -183,9 +212,6 @@ String formatSpeed(int bytesPerSecond) {
   return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB/s';
 }
 
-/// =======================
-/// 流量格式化（B -> MB 或 GB）
-/// =======================
 String formatTotal(int totalBytes) {
   double value = totalBytes.toDouble();
   double mb = value / (1024 * 1024);
