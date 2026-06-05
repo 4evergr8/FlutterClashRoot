@@ -1,18 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:convert';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
-/// =======================
-/// 全局配置（无默认值）
-/// =======================
 int port = 9090;
 
-/// =======================
-/// 数据状态
-/// =======================
 class TrafficState {
   int up = 0;
   int down = 0;
@@ -21,9 +16,7 @@ class TrafficState {
   bool connected = false;
 }
 
-/// =======================
-/// WS（独立的网络监听循环）
-/// =======================
+
 class WsManager {
   WebSocket? _ws;
   final TrafficState state;
@@ -61,29 +54,23 @@ class WsManager {
   }
 }
 
-/// =======================
-/// Foreground Task Handler
-/// =======================
+
 class MyTaskHandler extends TaskHandler {
   final TrafficState state = TrafficState();
   late final WsManager ws;
 
-  // 标志位，确保在配置未读取完成前，定时循环不执行错误逻辑
+
   bool _isInitialized = false;
 
-  /// =======================
-  /// 后台进程启动时，自己读取文件配置
-  /// =======================
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-      // 1. 独立在后台进程中读取 YAML 配置文件
+
       final settings = await readYamlAsMap(settingsPath);
 
-      // 2. 赋值全局变量 port
+
       port = settings['port'];
 
-      // 3. 初始化并启动 WebSocket 连接
       ws = WsManager(state);
       ws.connect();
 
@@ -95,9 +82,7 @@ class MyTaskHandler extends TaskHandler {
     }
   }
 
-  /// =======================
-  /// 独立的前端刷新循环（死等1000ms周期）
-  /// =======================
+
   @override
   void onRepeatEvent(DateTime timestamp) {
     // 如果后台还未读取完配置文件，显示正在初始化
@@ -124,6 +109,10 @@ class MyTaskHandler extends TaskHandler {
       );
     }
   }
+  @override
+  Future<void> onNotificationButtonPressed(String id) async {
+    await Process.run('su', ['-c', 'am force-stop a.forevergreat.mihomoroot']);;
+  }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
@@ -134,18 +123,12 @@ class MyTaskHandler extends TaskHandler {
   }
 }
 
-
-/// =======================
-/// entry point
-/// =======================
 @pragma('vm:entry-point')
 void startCallback() {
   FlutterForegroundTask.setTaskHandler(MyTaskHandler());
 }
 
-/// =======================
-/// 启动服务
-/// =======================
+
 void startMonitorService() async {
   // 1. 初始化配置
   FlutterForegroundTask.init(
@@ -166,15 +149,16 @@ void startMonitorService() async {
 
   // 2. 直接启动服务即可，不需要 withReceivePort，也不需要 sendDataToTask
   await FlutterForegroundTask.startService(
+    notificationButtons: [
+      const NotificationButton(id: 'close', text: '关闭监控'),
+    ],
+    serviceTypes: [ForegroundServiceTypes.dataSync],
     notificationTitle: '服务已启动',
     notificationText: '准备监控...',
     callback: startCallback,
   );
 }
 
-/// =======================
-/// 网速格式化（B/s -> KB/s 或 MB/s）
-/// =======================
 String formatSpeed(int bytesPerSecond) {
   double value = bytesPerSecond.toDouble();
   if (value < 1024 * 1024) {
@@ -183,9 +167,6 @@ String formatSpeed(int bytesPerSecond) {
   return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB/s';
 }
 
-/// =======================
-/// 流量格式化（B -> MB 或 GB）
-/// =======================
 String formatTotal(int totalBytes) {
   double value = totalBytes.toDouble();
   double mb = value / (1024 * 1024);
