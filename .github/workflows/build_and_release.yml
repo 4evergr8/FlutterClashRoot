@@ -35,7 +35,9 @@ jobs:
           curl -L -o mihomoR/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 
       - name: Copy APK to mihomoR
-        run: cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/
+        run: |
+          mkdir -p mihomoR/system/priv-app/mihomoR
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/system/priv-app/mihomoR/mihomoR.apk
 
       - name: Download latest stable Mihomo release
         run: |
