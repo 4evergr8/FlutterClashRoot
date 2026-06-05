@@ -552,14 +552,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.0"
-  screen_lock_detector:
-    dependency: "direct main"
-    description:
-      name: screen_lock_detector
-      sha256: a14e3dccbfe1547958cbda059be9c6b1f576d57242471ac6b88b8550da056e4f
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   shared_preferences:
     dependency: transitive
     description:
