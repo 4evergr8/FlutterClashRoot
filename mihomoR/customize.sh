@@ -1,20 +1,6 @@
 #!/system/bin/sh
 ui_print "==> 开始自定义安装: mihomoR"
 
-# -----------------------------
-# 1. APK 安装
-# -----------------------------
-APK_PATH="$MODPATH/app-arm64-v8a-release.apk"
-if [ -f "$APK_PATH" ]; then
-    ui_print "尝试安装 APK..."
-    pm install -r "$APK_PATH"
-    if [ $? -eq 0 ]; then
-        ui_print "APK 安装成功"
-        rm -f "$APK_PATH"
-    else
-        ui_print "警告: APK 安装失败"
-    fi
-fi
 
 # -----------------------------
 # 2. 恢复配置文件
