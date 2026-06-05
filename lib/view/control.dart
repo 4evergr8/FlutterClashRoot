@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mihomoR/service/control.dart';
+import 'package:mihomoR/service/path.dart';
+import 'package:mihomoR/service/subscriptions.dart';
 import 'package:mihomoR/widget.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -20,7 +22,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   late final TextEditingController _stopController;
   late final TextEditingController _displayController;
 
-  String webuiUrl = 'http://127.0.0.1:9090/ui';
 
   @override
   void initState() {
@@ -42,6 +43,9 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> openWeb() async {
+    final settings = await readYamlAsMap(settingsPath);
+    final port = settings['port'];
+    String webuiUrl = 'http://127.0.0.1:$port/ui';
     final uri = Uri.parse(webuiUrl);
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
