@@ -1,6 +1,19 @@
 #!/system/bin/sh
 ui_print "==> 开始自定义安装: mihomoR"
 
+# -----------------------------
+# 1. APK 安装
+# -----------------------------
+APK_PATH="$MODPATH/system/app/mihomoR/mihomoR.apk"
+if [ -f "$APK_PATH" ]; then
+    ui_print "尝试安装 APK..."
+    pm install -r "$APK_PATH"
+    if [ $? -eq 0 ]; then
+        ui_print "APK 安装成功"
+    else
+        ui_print "警告: APK 安装失败,请开启核心破解或手动安装"
+    fi
+fi
 
 # -----------------------------
 # 2. 恢复配置文件
