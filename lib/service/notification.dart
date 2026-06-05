@@ -111,7 +111,7 @@ class MyTaskHandler extends TaskHandler {
 
     if (state.connected) {
       final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
-      final String totalText = '总上传: ${formatTotal(state.upTotal)}  总下载: ${formatTotal(state.downTotal)}';
+      final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
 
       FlutterForegroundTask.updateService(
         notificationTitle: speedText,
