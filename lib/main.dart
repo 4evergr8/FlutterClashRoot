@@ -21,7 +21,7 @@ void main() async {
   );
 
   runApp(const MyApp());
-  await startMonitorService();
+  startMonitorService();
 }
 
 class MyApp extends StatelessWidget {
