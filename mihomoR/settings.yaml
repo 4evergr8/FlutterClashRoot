@@ -8,8 +8,6 @@ url: "https://www.google.com"
 #节点测速链接
 testtimeout: 2000
 #节点测速超时,毫秒
-interval: 1000
-#通知网速刷新间隔,毫秒
 
 
 
