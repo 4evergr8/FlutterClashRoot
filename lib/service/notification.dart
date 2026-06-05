@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:mihomoR/service/subscriptions.dart';
@@ -10,7 +9,6 @@ import 'package:web_socket_client/web_socket_client.dart';
 /// 全局配置（无默认值）
 /// =======================
 int port = 9090;
-int interval = 1000;
 
 /// =======================
 /// 数据状态
@@ -18,11 +16,13 @@ int interval = 1000;
 class TrafficState {
   int up = 0;
   int down = 0;
+  int upTotal = 0;
+  int downTotal = 0;
   bool connected = false;
 }
 
 /// =======================
-/// WS（无手动重连）
+/// WS（独立的网络监听循环）
 /// =======================
 class WsManager {
   WebSocket? _ws;
@@ -31,14 +31,19 @@ class WsManager {
   WsManager(this.state);
 
   void connect() {
-    _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'));
+    _ws = WebSocket(
+      Uri.parse('ws://127.0.0.1:$port/traffic'),
+      backoff: const ConstantBackoff(Duration(seconds: 1)),
+    );
 
     _ws!.messages.listen(
-      (event) {
+          (event) {
         final data = jsonDecode(event);
 
         state.up = data['up'] ?? 0;
         state.down = data['down'] ?? 0;
+        state.upTotal = data['upTotal'] ?? 0;
+        state.downTotal = data['downTotal'] ?? 0;
         state.connected = true;
       },
       onError: (_) {
@@ -63,67 +68,72 @@ class MyTaskHandler extends TaskHandler {
   final TrafficState state = TrafficState();
   late final WsManager ws;
 
-  Timer? _timer;
+  // 标志位，确保在配置未读取完成前，定时循环不执行错误逻辑
+  bool _isInitialized = false;
 
+  /// =======================
+  /// 后台进程启动时，自己读取文件配置
+  /// =======================
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    final settings = await readYamlAsMap(settingsPath);
+    try {
+      // 1. 独立在后台进程中读取 YAML 配置文件
+      final settings = await readYamlAsMap(settingsPath);
 
-    port = settings['port'];
-    interval = settings['interval'];
+      // 2. 赋值全局变量 port
+      port = settings['port'];
 
-    ws = WsManager(state);
-    ws.connect();
+      // 3. 初始化并启动 WebSocket 连接
+      ws = WsManager(state);
+      ws.connect();
 
-    _startNotifyLoop();
-  }
-
-  /// =======================
-  /// 通知刷新（interval控制）
-  /// =======================
-  void _startNotifyLoop() {
-    _timer?.cancel();
-
-    _timer = Timer.periodic(Duration(milliseconds: interval), (_) {
-      if (state.connected) {
-        FlutterForegroundTask.updateService(
-          notificationTitle: 'mihomo 网速监控',
-          notificationText: '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}',
-        );
-      } else {
-        FlutterForegroundTask.updateService(notificationTitle: 'mihomo 网速监控', notificationText: '正在连接核心...');
-      }
-    });
-  }
-
-  /// =======================
-  /// 按钮：断开所有连接（仅发 HTTP DELETE）
-  /// =======================
-  @override
-  void onNotificationButtonPressed(String id) {
-    if (id == 'disconnect') {
-      _disconnectAll();
+      // 4. 标记初始化完成
+      _isInitialized = true;
+    } catch (e) {
+      // 错误处理：如果文件读取失败，可以在这里捕获
+      _isInitialized = false;
     }
   }
 
-  Future<void> _disconnectAll() async {
-    final dio = Dio();
-
-    await dio.delete(
-      'http://127.0.0.1:$port/connections',
-      options: Options(headers: {'Content-Type': 'application/json'}),
-    );
-  }
-
+  /// =======================
+  /// 独立的前端刷新循环（死等1000ms周期）
+  /// =======================
   @override
-  void onRepeatEvent(DateTime timestamp) {}
+  void onRepeatEvent(DateTime timestamp) {
+    // 如果后台还未读取完配置文件，显示正在初始化
+    if (!_isInitialized) {
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'mihomo 网速监控',
+        notificationText: '正在读取核心配置...',
+      );
+      return;
+    }
+
+    if (state.connected) {
+      final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
+      final String totalText = '总上传: ${formatTotal(state.upTotal)}  总下载: ${formatTotal(state.downTotal)}';
+
+      FlutterForegroundTask.updateService(
+        notificationTitle: speedText,
+        notificationText: totalText,
+      );
+    } else {
+      FlutterForegroundTask.updateService(
+        notificationTitle: 'mihomo 网速监控',
+        notificationText: '正在连接核心...',
+      );
+    }
+  }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    _timer?.cancel();
-    ws.close();
+    // 只有初始化成功了，才需要关闭 ws
+    if (_isInitialized) {
+      ws.close();
+    }
   }
 }
+
 
 /// =======================
 /// entry point
@@ -136,7 +146,8 @@ void startCallback() {
 /// =======================
 /// 启动服务
 /// =======================
-void initAndStartService() {
+void startMonitorService() async {
+  // 1. 初始化配置
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
       channelId: 'mihomo_channel',
@@ -148,31 +159,38 @@ void initAndStartService() {
     foregroundTaskOptions: ForegroundTaskOptions(
       autoRunOnBoot: false,
       allowWakeLock: true,
-      eventAction: ForegroundTaskEventAction.repeat(1000),
+      eventAction: ForegroundTaskEventAction.repeat(1000), // 固定 1000ms 周期
     ),
-    iosNotificationOptions: IOSNotificationOptions(showNotification: false, playSound: false),
+    iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
   );
-  FlutterForegroundTask.startService(
+
+  // 2. 直接启动服务即可，不需要 withReceivePort，也不需要 sendDataToTask
+  await FlutterForegroundTask.startService(
     notificationTitle: '服务已启动',
-    notificationText: 'mihomo 监控运行中',
-    notificationButtons: const [NotificationButton(id: 'disconnect', text: '断开连接')],
+    notificationText: '准备监控...',
     callback: startCallback,
   );
 }
 
 /// =======================
-/// 速度格式化（B基准，不除以8）
+/// 网速格式化（B/s -> KB/s 或 MB/s）
 /// =======================
-String formatSpeed(int bps) {
-  if (bps < 1024) {
-    return '$bps B/s';
-  }
-
-  double value = bps.toDouble();
-
+String formatSpeed(int bytesPerSecond) {
+  double value = bytesPerSecond.toDouble();
   if (value < 1024 * 1024) {
     return '${(value / 1024).toStringAsFixed(1)} KB/s';
   }
-
   return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+}
+
+/// =======================
+/// 流量格式化（B -> MB 或 GB）
+/// =======================
+String formatTotal(int totalBytes) {
+  double value = totalBytes.toDouble();
+  double mb = value / (1024 * 1024);
+  if (mb < 1024) {
+    return '${mb.toStringAsFixed(1)} MB';
+  }
+  return '${(mb / 1024).toStringAsFixed(2)} GB';
 }
