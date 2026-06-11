@@ -150,7 +150,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
   Color _getColor(BuildContext context, int delay) {
     final cs = Theme.of(context).colorScheme;
-    final t = timeout;
+    final t = timeout; 
 
     // 未测试
     if (delay == -1) return cs.outline;
