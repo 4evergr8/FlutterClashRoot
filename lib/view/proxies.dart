@@ -115,8 +115,7 @@ class _ProxiesViewState extends State<ProxiesView>
 
         totalCount = list.length;
 
-        successCount =
-            list.where((e) => e.delay > 0 && e.delay <= timeout).length;
+        successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
 
         list.sort((a, b) {
           if (a.delay <= 0) return 1;
@@ -241,8 +240,7 @@ class _ProxiesViewState extends State<ProxiesView>
               ...delayList.map((item) {
                 final color = _getColor(context, item.delay);
 
-                final isAlive =
-                    item.delay > 0 && item.delay <= timeout;
+                final isAlive = item.delay > 0 && item.delay < timeout;
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
