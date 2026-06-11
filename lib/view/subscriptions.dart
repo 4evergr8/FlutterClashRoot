@@ -426,13 +426,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                             if (count == 0) return cs.error;
 
-                                            final r = alive / count;
+                                            final r = count == 0 ? 0.0 : alive / count;
 
-                                            if (r >= 0.8) return cs.primary;
-                                            if (r >= 0.3) return cs.secondary;
-                                            if (r > 0) return cs.tertiary;
+                                            if (r >= 2 / 3) return cs.primary;      // 健康
+                                            if (r >= 1 / 3) return cs.secondary;    // 一般
+                                            if (r > 0) return cs.tertiary;          // 较差
 
-                                            return cs.error;
+                                            return cs.error;                        // 全挂
                                           })(),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
@@ -449,13 +449,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                               if (count == 0) return cs.onError;
 
-                                              final r = alive / count;
+                                              final r = count == 0 ? 0.0 : alive / count;
 
-                                              if (r >= 0.8) return cs.onPrimary;
-                                              if (r >= 0.3) return cs.onSecondary;
-                                              if (r > 0) return cs.onTertiary;
+                                              if (r >= 2 / 3) return cs.onPrimary;     // 健康
+                                              if (r >= 1 / 3) return cs.onSecondary;   // 一般
+                                              if (r > 0) return cs.onTertiary;         // 较差
 
-                                              return cs.onError;
+                                              return cs.onError;                      // 全挂
                                             })(),
                                       ),
                                     ),
