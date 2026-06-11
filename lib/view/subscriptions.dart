@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -293,9 +294,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               ? List<Map<String, dynamic>>.from(data['subscriptions'])
               : <Map<String, dynamic>>[];
 
-      final existingLinks = list.map((e) => e['link']).toSet();
+      final existingIds = list.map((e) => e['id']).toSet();
 
-      final inputLinks = result.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final inputLinks = result
+          .split('\n')
+          .map((e) => canonicalUrl(e))
+          .where((e) => e.isNotEmpty)
+          .toList();
 
       // 输入内部去重（保留顺序）
       final seen = <String>{};
@@ -311,8 +316,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final newLinks = <String>[];
 
       for (var link in links) {
-        if (existingLinks.contains(link)) {
-          showErrorSnackBarGlobal('订阅已存在: $link'); // ✅ 每个都提示
+        final id = sha256Prefix(link);
+
+        if (existingIds.contains(id)) {
+          showErrorSnackBarGlobal('订阅已存在: $link');
         } else {
           newLinks.add(link);
         }
@@ -321,9 +328,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       // 并行下载
       final futures =
           newLinks.map((link) async {
-            final id = DateTime.now().microsecondsSinceEpoch.toString();
+            final id = sha256Prefix(link);
             try {
-              final r = await downloadYamlFile(link, ua, id, timeout);
+              final r = await downloadYamlFile(canonicalUrl(link), ua, id, timeout);
               return r;
             } catch (e) {
               showErrorSnackBarGlobal('$link 添加失败: $e');
