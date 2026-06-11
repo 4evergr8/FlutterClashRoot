@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:mihomoR/service/path.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 import 'package:path_provider/path_provider.dart';
@@ -141,4 +143,43 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
     }
     rethrow;
   }
+}
+String sha256Prefix(String input) {
+  // 1. 转成字节
+  final bytes = utf8.encode(input);
+
+  // 2. 计算 SHA256
+  final digest = sha256.convert(bytes);
+
+  // 3. 转成十六进制字符串
+  final hex = digest.toString();
+
+  // 4. 返回前 length 个字符
+  return hex.substring(0, 8);
+}
+
+String canonicalUrl(String input) {
+  var uri = Uri.parse(input.trim());
+
+  // 1. 统一 scheme + host 小写
+  final scheme = uri.scheme.toLowerCase();
+  final host = uri.host.toLowerCase();
+
+  // 2. path 统一：空 → /
+  String path = uri.path.isEmpty ? '/' : uri.path;
+
+  // 3. 去掉末尾多余 /
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.substring(0, path.length - 1);
+  }
+
+  // 4. query 不变（保留原语义）
+  final query = uri.query;
+
+  return Uri(
+    scheme: scheme,
+    host: host,
+    path: path,
+    query: query.isEmpty ? null : query,
+  ).toString();
 }
