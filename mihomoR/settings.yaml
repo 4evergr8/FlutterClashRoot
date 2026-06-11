@@ -6,7 +6,7 @@ timeout: 5000
 #下载订阅超时,毫秒
 url: "https://www.google.com"
 #节点测速链接
-testtimeout: 2000
+testtimeout: 3000
 #节点测速超时,毫秒
 
 
