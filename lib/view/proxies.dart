@@ -118,9 +118,16 @@ class _ProxiesViewState extends State<ProxiesView>
         successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
 
         list.sort((a, b) {
-          if (a.delay <= 0) return 1;
-          if (b.delay <= 0) return -1;
-          return a.delay.compareTo(b.delay);
+          final at = a.delay;
+          final bt = b.delay;
+
+          final aBad = at <= 0 || at >= timeout;
+          final bBad = bt <= 0 || bt >= timeout;
+
+          if (aBad && !bBad) return 1;
+          if (!aBad && bBad) return -1;
+
+          return at.compareTo(bt);
         });
 
         delayList = list;
@@ -162,26 +169,17 @@ class _ProxiesViewState extends State<ProxiesView>
 
   Color _getColor(BuildContext context, int delay) {
     final cs = Theme.of(context).colorScheme;
-    final t = timeout; // settings['testtimeout']
+    final t = timeout;
 
-    // 未测试
-    if (delay == -1) return cs.outline;
+    if (delay == -1) return cs.outline;        // 未测试
+    if (delay <= 0 || delay > t) return cs.error; // 完全不可用
 
-    // timeout 或不可用（包含 0 / 超时）
-    if (delay <= 0 || delay > t) return cs.error;
+    if (delay <= 1000) return cs.primary;       // 很健康
+    if (delay <= 2000) return cs.secondary;     // 一般
+    if (delay <= t) return cs.tertiary;        // 很差
 
-    final step = t / 3;
-
-    // 0 ~ 1/3
-    if (delay <= step) return cs.primary;
-
-    // 1/3 ~ 2/3
-    if (delay <= step * 2) return cs.secondary;
-
-    // 2/3 ~ 3/3
-    return cs.tertiary;
+    return cs.error; // 冗余兜底
   }
-
   String _formatDelay(int delay) {
     if (delay == -1) return '--';
     if (delay <= 0) return 'timeout';
