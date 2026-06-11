@@ -162,24 +162,30 @@ class _ProxiesViewState extends State<ProxiesView>
   }
 
   Color _getColor(BuildContext context, int delay) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final t = timeout; // settings['testtimeout']
 
-    if (delay == -1) return colorScheme.outline;
+    // 未测试
+    if (delay == -1) return cs.outline;
 
-    if (delay <= 0) return colorScheme.error;
+    // timeout 或不可用（包含 0 / 超时）
+    if (delay <= 0 || delay > t) return cs.error;
 
-    if (delay <= 100) return colorScheme.primary;
+    final step = t / 3;
 
-    if (delay <= 300) return colorScheme.secondary;
+    // 0 ~ 1/3
+    if (delay <= step) return cs.primary;
 
-    return colorScheme.error;
+    // 1/3 ~ 2/3
+    if (delay <= step * 2) return cs.secondary;
+
+    // 2/3 ~ 3/3
+    return cs.tertiary;
   }
 
   String _formatDelay(int delay) {
     if (delay == -1) return '--';
-
     if (delay <= 0) return 'timeout';
-
     return '$delay ms';
   }
 
