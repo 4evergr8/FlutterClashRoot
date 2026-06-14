@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,60 +19,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   List<Map<String, dynamic>> subscriptions = [];
   bool isLoading = true;
 
-  String formatSize(int bytes) {
-    const mb = 1024 * 1024;
-    const gb = mb * 1024;
-    const tb = gb * 1024;
 
-    final valueMB = bytes / mb;
 
-    if (valueMB < 1024) {
-      return '${valueMB.toStringAsFixed(1)}M';
-    }
 
-    final valueGB = bytes / gb;
-    if (valueGB < 1024) {
-      return '${valueGB.toStringAsFixed(1)}G';
-    }
-
-    final valueTB = bytes / tb;
-    return '${valueTB.toStringAsFixed(1)}T';
-  }
-
-  String formatTimeAgo(String timestampMsStr) {
-    final pastMs = int.tryParse(timestampMsStr);
-    if (pastMs == null) return '时间格式错误';
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    int seconds = (nowMs - pastMs) ~/ 1000;
-
-    if (seconds <= 0) return '刚刚';
-
-    const int secsPerMin = 60;
-    const int secsPerHour = secsPerMin * 60;
-    const int secsPerDay = secsPerHour * 24;
-    const int secsPerMonth = secsPerDay * 30;
-    const int secsPerYear = secsPerDay * 365;
-
-    final years = seconds ~/ secsPerYear;
-    seconds %= secsPerYear;
-    final months = seconds ~/ secsPerMonth;
-    seconds %= secsPerMonth;
-    final days = seconds ~/ secsPerDay;
-    seconds %= secsPerDay;
-    final hours = seconds ~/ secsPerHour;
-    seconds %= secsPerHour;
-    final minutes = seconds ~/ secsPerMin;
-
-    final List<String> parts = [];
-    if (years > 0) parts.add('$years年');
-    if (months > 0) parts.add('$months个月');
-    if (days > 0) parts.add('$days天');
-    if (hours > 0) parts.add('$hours小时');
-    if (minutes > 0) parts.add('$minutes分');
-
-    if (parts.isEmpty) return '刚刚';
-    return '${parts.join()}前';
-  }
 
   void applySubscriptions(List<Map<String, dynamic>> list) {
     final normalized = list.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -103,6 +51,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     final close = await showLoadingDialogGlobal();
     try {
       final settings = await readYamlAsMap(settingsPath);
+
       final port = settings['port'];
       final base = await readYamlAsMap("$mainPath/config/$id.yaml");
       final override = await readYamlAsMap(overridePath);
@@ -121,6 +70,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         'http://127.0.0.1:$port/connections',
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
+      settings["select"] = id;
+      await writeYamlFromMap(settings, settingsPath);
     } catch (e) {
       showErrorSnackBarGlobal('$e');
     } finally {
@@ -181,7 +132,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
 
       final newList = resultMap.values.toList();
-      applySubscriptions(newList); // ✅ 这里会自动 setState
+      final select = settings['select'];
+      for (final sub in newList) {
+        sub['select'] = sub['id'] == select;
+      }
+      applySubscriptions(newList);
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
     } catch (e) {
       showErrorSnackBarGlobal('刷新订阅失败: $e');
@@ -195,8 +150,14 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
     try {
       final data = await readYamlAsMap(subscriptionsPath);
+      final settings = await readYamlAsMap(settingsPath);
+
       final list = (data['subscriptions'] as List?) ?? [];
       subscriptions = List<Map<String, dynamic>>.from(list);
+      final select = settings['select'];
+      for (final sub in subscriptions) {
+        sub['select'] = sub['id'] == select;
+      }
       applySubscriptions(subscriptions);
     } catch (e) {
       subscriptions = [];
@@ -229,8 +190,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       final data = {'subscriptions': subscriptions};
       await writeYamlFromMap(data, subscriptionsPath);
       await Process.run('su', ['-c', 'rm -f $mainPath/config/${sub['id']}.yaml']);
-      if (sub['select'] == true && subscriptions.isNotEmpty) {
-        subscriptions.first['select'] = true;
+      final settings = await readYamlAsMap(settingsPath);
+
+      if (settings['select'] == sub['id']) {
+        settings['select'] = subscriptions.isNotEmpty ? subscriptions.first['id'] : '';
+        await writeYamlFromMap(settings, settingsPath);
       }
       applySubscriptions(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
@@ -383,7 +347,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                       final v = value * 100 ~/ totalValue;
                       return v.clamp(0, 100);
                     }
-
                     final isSelected = sub['select'] == true;
 
                     return Card(
@@ -398,12 +361,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                         onTap: () async {
                           setState(() {
                             for (final s in subscriptions) {
-                              s['select'] = false;
+                              s['select'] = s['id'] == sub['id'];
                             }
-                            sub['select'] = true;
                           });
+
                           applySubscriptions(subscriptions);
-                          await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
                           await _onSubscriptionTap(sub['id']);
                         },
                         child: Padding(
