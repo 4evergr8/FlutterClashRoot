@@ -183,3 +183,56 @@ String canonicalUrl(String input) {
     query: query.isEmpty ? null : query,
   ).toString();
 }
+String formatTimeAgo(String timestampMsStr) {
+  final pastMs = int.tryParse(timestampMsStr);
+  if (pastMs == null) return '时间格式错误';
+  final nowMs = DateTime.now().millisecondsSinceEpoch;
+  int seconds = (nowMs - pastMs) ~/ 1000;
+
+  if (seconds <= 0) return '刚刚';
+
+  const int secsPerMin = 60;
+  const int secsPerHour = secsPerMin * 60;
+  const int secsPerDay = secsPerHour * 24;
+  const int secsPerMonth = secsPerDay * 30;
+  const int secsPerYear = secsPerDay * 365;
+
+  final years = seconds ~/ secsPerYear;
+  seconds %= secsPerYear;
+  final months = seconds ~/ secsPerMonth;
+  seconds %= secsPerMonth;
+  final days = seconds ~/ secsPerDay;
+  seconds %= secsPerDay;
+  final hours = seconds ~/ secsPerHour;
+  seconds %= secsPerHour;
+  final minutes = seconds ~/ secsPerMin;
+
+  final List<String> parts = [];
+  if (years > 0) parts.add('$years年');
+  if (months > 0) parts.add('$months个月');
+  if (days > 0) parts.add('$days天');
+  if (hours > 0) parts.add('$hours小时');
+  if (minutes > 0) parts.add('$minutes分');
+
+  if (parts.isEmpty) return '刚刚';
+  return '${parts.join()}前';
+}
+String formatSize(int bytes) {
+  const mb = 1024 * 1024;
+  const gb = mb * 1024;
+  const tb = gb * 1024;
+
+  final valueMB = bytes / mb;
+
+  if (valueMB < 1024) {
+    return '${valueMB.toStringAsFixed(1)}M';
+  }
+
+  final valueGB = bytes / gb;
+  if (valueGB < 1024) {
+    return '${valueGB.toStringAsFixed(1)}G';
+  }
+
+  final valueTB = bytes / tb;
+  return '${valueTB.toStringAsFixed(1)}T';
+}
