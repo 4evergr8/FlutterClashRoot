@@ -64,14 +64,14 @@ ua: "clash.meta"
 #下载订阅时使用的User-Agent
 port: 9090
 #软件打开的控制端口,需要和配置中的端口对应
-timeout: 5000
+timeout: 10000
 #下载订阅超时,毫秒
 url: "https://www.google.com"
 #节点测速链接
-testtimeout: 2000
+testtimeout: 3000
 #节点测速超时,毫秒
-interval: 1000
-#通知网速刷新间隔,毫秒
+select: ""
+#当前选中订阅id
 ```
 
 ### subscriptions.yaml 订阅信息
@@ -79,8 +79,8 @@ interval: 1000
 ```yaml
 subscriptions:
   - id: "example"
-    #订阅的ID,一般为时间戳,同时用作文件名
-    link: "https://raw.githubusercontent.com/4evergr8/mihomoR/refs/heads/main/mihomo/config/example.yaml"
+    #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
+    link: ""
     #订阅下载链接
     label: "测试订阅"
     #订阅显示名称
@@ -98,8 +98,6 @@ subscriptions:
     #可用节点数量
     favorite: false
     #是否收藏订阅,收藏的订阅会被置顶
-    select: false
-    #是否被选中
 ```
 
 ### override.yaml 非递归配置覆写
@@ -111,9 +109,9 @@ external-ui: ./metacubexd
 allow-lan: false
 log-level: warning
 ipv6: true
-keep-alive-idle: 0
-keep-alive-interval: 30
-disable-keep-alive: true
+keep-alive-idle: 15
+keep-alive-interval: 10
+disable-keep-alive: false
 unified-delay: true
 tcp-concurrent: true
 geodata-loader: memconservative
@@ -125,7 +123,9 @@ geodata-mode: true
 geox-url:
   geoip: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat"
   geosite: "https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-
+profile:
+  store-selected: false
+  store-fake-ip: true
 
 tun:
   enable: true
@@ -134,6 +134,7 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
+
 
 
 dns:
@@ -156,11 +157,7 @@ dns:
   nameserver:
     - https://dns.alidns.com/dns-query#h3=true
     - https://doh.pub/dns-query
-  proxy-server-nameserver:
-    - https://cloudflare-dns.com/dns-query#h3=true
-    - https://dns.google/dns-query#h3=true
-    - tls://1.1.1.1:853
-    - tls://8.8.8.8:853
+
 ```
 
 
