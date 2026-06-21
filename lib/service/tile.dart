@@ -15,7 +15,7 @@ Tile onTileClicked(Tile tile) {
     tile
       ..tileStatus = TileStatus.inactive
       ..label = "mihomo"
-      ..drawableName = "quick_settings_base_icon"
+      ..drawableName = "false"
       ..contentDescription = "mihomo 已停止";
   } else {
     startMihomo();
@@ -23,7 +23,7 @@ Tile onTileClicked(Tile tile) {
     tile
       ..tileStatus = TileStatus.active
       ..label = "mihomo"
-      ..drawableName = "quick_settings_base_icon"
+      ..drawableName = "true"
       ..contentDescription = "mihomo 已启动";
   }
 
