@@ -93,7 +93,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         Tile(
           label: "mihomo",
           tileStatus: TileStatus.active,
-          drawableName: 'quick_settings_base_icon',
+          drawableName: 'on',
           contentDescription: "mihomo 已启动",
         ),
       );
@@ -116,7 +116,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         Tile(
           label: "mihomo",
           tileStatus: TileStatus.inactive,
-          drawableName: 'quick_settings_base_icon',
+          drawableName: 'off',
           contentDescription: "mihomo 已停止",
         ),
       );
