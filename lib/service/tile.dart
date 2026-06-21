@@ -33,7 +33,7 @@ Tile onTileClicked(Tile tile) {
 @pragma('vm:entry-point')
 Tile? onTileAdded(Tile tile) {
   tile.label = "mihomo";
-  tile.drawableName = "quick_settings_base_icon";
+  tile.drawableName = "off";
   tile.contentDescription = "mihomo 核心控制";
   tile.tileStatus = TileStatus.inactive;
   return tile;
