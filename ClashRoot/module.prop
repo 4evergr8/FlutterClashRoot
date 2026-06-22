@@ -3,4 +3,4 @@ name=ClashRoot
 version=2.1.3
 versionCode=10
 author=4evergr8
-description=基于Flutter框架的mihomo内核控制器，仅限Root用户,仅限KernelSU
+description=基于Flutter框架的Clash内核控制器，仅限Root用户,仅限KernelSU
