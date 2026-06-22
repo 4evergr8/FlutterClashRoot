@@ -50,7 +50,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runCheck() async {
-    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await checkClash();
       if (!mounted) return;
@@ -64,20 +63,22 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runTest() async {
-    showSnackBarGlobal("load", "请稍候...");
+    final close=showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await testClash();
       if (!mounted) return;
       setState(() {
         _displayController.text = result;
       });
+      close();
+      showSnackBarGlobal("success", "测试完成");
     } catch (e) {
+      close();
       showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _startClash() async {
-    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await startClash();
       if (!mounted) return;
@@ -98,7 +99,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _stopClash() async {
-    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await stopClash();
       if (!mounted) return;
