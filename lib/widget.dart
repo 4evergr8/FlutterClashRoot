@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mihomoR/view/proxies.dart';
-import 'package:mihomoR/main.dart';
-import 'package:mihomoR/view/split.dart';
-import 'package:mihomoR/view/subscriptions.dart';
-import 'package:mihomoR/view/control.dart';
+import 'package:clashroot/view/proxies.dart';
+import 'package:clashroot/main.dart';
+import 'package:clashroot/view/split.dart';
+import 'package:clashroot/view/subscriptions.dart';
+import 'package:clashroot/view/control.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});

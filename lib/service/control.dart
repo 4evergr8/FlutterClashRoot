@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:mihomoR/service/path.dart';
+import 'package:clashroot/service/path.dart';
 
 Future<String> stopMihomo() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "kill"]);

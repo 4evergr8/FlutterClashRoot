@@ -1,17 +1,17 @@
-# mihomoR
+# ClashRoot
 
 <p align="center">
   <img src="./assets/aaa.png" alt="Logo" width="100" height="100">
 </p>
 
-<h3 align="center">mihomoR</h3>
+<h3 align="center">ClashRoot</h3>
 
 <p align="center">
   基于Flutter框架的mihomo内核控制器,仅限KernelSU<br>
   订阅切换、配置覆写、内核启停<br>
-  <a href="https://github.com/4evergr8/mihomoR/issues/new">🐞故障报告</a>
+  <a href="https://github.com/4evergr8/ClashRoot/issues/new">🐞故障报告</a>
   ·
-  <a href="https://github.com/4evergr8/mihomoR/issues/new">🏹功能请求</a>
+  <a href="https://github.com/4evergr8/ClashRoot/issues/new">🏹功能请求</a>
 </p>
 
 ## 目录
@@ -49,8 +49,8 @@
 </table>
 ## 食用方法
 
-1. 前往[Release](https://github.com/4evergr8/mihomoR/releases)下载对应架构的APK和mihomoR.zip
-2. 在KernelSU内安装mihomoR.zip,授予mihomoR应用root权限,重启设备
+1. 前往[Release](https://github.com/4evergr8/ClashRoot/releases)下载对应架构的APK和ClashRoot.zip
+2. 在KernelSU内安装ClashRoot.zip,授予ClashRoot应用root权限,重启设备
 3. 由于每次构建会生成不同的签名,只有开启核心破解后才能更新app,无法更新请前往模块目录手动安装apk
 4. 添加订阅,选中订阅后重启核心
 5. 前往WebUI观察运行情况

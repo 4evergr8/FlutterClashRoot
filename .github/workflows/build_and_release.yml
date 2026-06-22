@@ -30,39 +30,39 @@ jobs:
 
       - name: Download GeoIP and Geosite
         run: |
-          mkdir -p mihomoR
-          curl -L -o mihomoR/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
-          curl -L -o mihomoR/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+          mkdir -p ClashRoot
+          curl -L -o ClashRoot/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat
+          curl -L -o ClashRoot/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
 
-      - name: Copy APK to mihomoR
+      - name: Copy APK to ClashRoot
         run: |
-          mkdir -p mihomoR/system/app/mihomoR
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk mihomoR/system/app/mihomoR/mihomoR.apk
+          mkdir -p ClashRoot/system/app/ClashRoot
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ClashRoot/system/app/ClashRoot/ClashRoot.apk
 
-      - name: Download latest stable Mihomo release
+      - name: Download latest stable ClashRoot release
         run: |
           RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)
           MIHOMO_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?mihomo-android-arm64-v8-v[0-9]+\.[0-9]+\.[0-9]+\.gz(?=")' | head -n 1)
           echo "Downloading Mihomo: $MIHOMO_URL"
-          curl -L -o mihomoR/mihomo.gz "$MIHOMO_URL"
-          gunzip -f mihomoR/mihomo.gz
+          curl -L -o ClashRoot/mihomo.gz "$MIHOMO_URL"
+          gunzip -f ClashRoot/mihomo.gz
 
       - name: Download latest stable MetaCubeXD release
         run: |
           RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/metacubexd/releases/latest)
           METACUBEXD_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?compressed-dist.tgz(?=")' | head -n 1)
           echo "Downloading MetaCubeXD: $METACUBEXD_URL"
-          mkdir -p mihomoR/metacubexd
+          mkdir -p ClashRoot/metacubexd
           curl -L -o metacubexd.tgz "$METACUBEXD_URL"
-          tar -xzf metacubexd.tgz -C mihomoR/metacubexd
+          tar -xzf metacubexd.tgz -C ClashRoot/metacubexd
           rm metacubexd.tgz
 
-      - name: Package mihomoR.zip
+      - name: Package ClashRoot.zip
         run: |
-          (cd mihomoR && zip -r ../mihomoR.zip .)
+          (cd ClashRoot && zip -r ../ClashRoot.zip .)
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          path: mihomoR.zip
+          path: ClashRoot.zip
           archive: false

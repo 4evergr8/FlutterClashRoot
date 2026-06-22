@@ -9,7 +9,7 @@
 
 
     <application
-            android:label="mihomoR"
+            android:label="ClashRoot"
             android:name="${applicationName}"
             android:icon="@mipmap/ic_launcher">
 

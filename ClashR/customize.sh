@@ -1,10 +1,10 @@
 #!/system/bin/sh
-ui_print "==> 开始自定义安装: mihomoR"
+ui_print "==> 开始自定义安装: ClashRoot"
 
 # -----------------------------
 # 1. APK 安装
 # -----------------------------
-APK_PATH="$MODPATH/system/app/mihomoR/mihomoR.apk"
+APK_PATH="$MODPATH/system/app/ClashRoot/ClashRoot.apk"
 if [ -f "$APK_PATH" ]; then
     ui_print "尝试安装 APK..."
     pm install -r "$APK_PATH"
@@ -18,7 +18,7 @@ fi
 # -----------------------------
 # 2. 恢复配置文件
 # -----------------------------
-OLD_PATH="/data/adb/modules/mihomoR"
+OLD_PATH="/data/adb/modules/ClashRoot"
 
 if [ -d "$OLD_PATH/config" ]; then
     ui_print "恢复 config 文件夹"

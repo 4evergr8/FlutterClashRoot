@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
-import 'package:mihomoR/widget.dart';
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/widget.dart';
 
 class SubscriptionView extends StatefulWidget {
   const SubscriptionView({super.key});

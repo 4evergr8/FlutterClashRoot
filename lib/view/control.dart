@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:mihomoR/service/control.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
-import 'package:mihomoR/widget.dart';
+import 'package:clashroot/service/control.dart';
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/widget.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -91,10 +91,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       });
       await QuickSettings.syncTile(
         Tile(
-          label: "mihomo",
+          label: "ClashRoot",
           tileStatus: TileStatus.active,
           drawableName: 'alarm_on',
-          contentDescription: "mihomo 已启动",
+          contentDescription: "Clash核心已启动",
         ),
       );
     } catch (e) {
@@ -114,10 +114,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
       });
       await QuickSettings.syncTile(
         Tile(
-          label: "mihomo",
+          label: "ClashRoot",
           tileStatus: TileStatus.inactive,
           drawableName: 'alarm_off',
-          contentDescription: "mihomo 已停止",
+          contentDescription: "Clash核心已停止",
         ),
       );
     } catch (e) {

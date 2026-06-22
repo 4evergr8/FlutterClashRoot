@@ -1,5 +1,5 @@
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
-import 'package:mihomoR/service/control.dart';
+import 'package:clashroot/service/control.dart';
 
 /// =======================
 /// Tile callbacks
@@ -14,17 +14,17 @@ Tile onTileClicked(Tile tile) {
 
     tile
       ..tileStatus = TileStatus.inactive
-      ..label = "mihomo"
+      ..label = "ClashRoot"
       ..drawableName = "alarm_off"
-      ..contentDescription = "mihomo 已停止";
+      ..contentDescription = "Clash核心已停止";
   } else {
     startMihomo();
 
     tile
       ..tileStatus = TileStatus.active
-      ..label = "mihomo"
+      ..label = "ClashRoot"
       ..drawableName = "alarm_on"
-      ..contentDescription = "mihomo 已启动";
+      ..contentDescription = "Clash核心已启动";
   }
 
   return tile;

@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-MIHOMO_DIR="/data/adb/modules/mihomoR"
+MIHOMO_DIR="/data/adb/modules/ClashRoot"
 MIHOMO_BIN="./mihomo"
 
 # 命令字符串变量

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_device_apps/flutter_device_apps.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
 
 import '../widget.dart';
 

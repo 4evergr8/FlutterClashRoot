@@ -1,4 +1,4 @@
-package a.forevergreat.mihomoroot
+package app.flutter.clashroot
 
 import io.flutter.embedding.android.FlutterActivity
 

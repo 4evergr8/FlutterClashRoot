@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
-import 'package:mihomoR/widget.dart';
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/widget.dart';
 
 class ProxiesView extends StatefulWidget {
   const ProxiesView({super.key});

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:crypto/crypto.dart';
-import 'package:mihomoR/service/path.dart';
+import 'package:clashroot/service/path.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mihomoR/service/notification.dart';
-import 'package:mihomoR/service/tile.dart';
+import 'package:clashroot/service/notification.dart';
+import 'package:clashroot/service/tile.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'theme/theme.dart';
 import 'theme/util.dart';
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       navigatorKey: navigatorKey,
-      title: 'mihomoR',
+      title: 'ClashRoot',
       theme: brightness == Brightness.light ? theme.light() : theme.dark(),
       home: const HomeScreen(),
     );

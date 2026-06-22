@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:mihomoR/service/path.dart';
-import 'package:mihomoR/service/subscriptions.dart';
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
 int port = 9090;
@@ -88,7 +88,7 @@ class MyTaskHandler extends TaskHandler {
     // 如果后台还未读取完配置文件，显示正在初始化
     if (!_isInitialized) {
       FlutterForegroundTask.updateService(
-        notificationTitle: 'mihomo 网速监控',
+        notificationTitle: 'ClashRoot网速监控',
         notificationText: '正在读取核心配置...',
       );
       return;
@@ -104,14 +104,14 @@ class MyTaskHandler extends TaskHandler {
       );
     } else {
       FlutterForegroundTask.updateService(
-        notificationTitle: 'mihomo 网速监控',
+        notificationTitle: 'ClashRoot网速监控',
         notificationText: '正在连接核心...',
       );
     }
   }
   @override
   Future<void> onNotificationButtonPressed(String id) async {
-    await Process.run('su', ['-c', 'am force-stop a.forevergreat.mihomoroot']);;
+    await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);;
   }
 
   @override
