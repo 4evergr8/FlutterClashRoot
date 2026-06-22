@@ -1,4 +1,3 @@
-import 'package:clashroot/main.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:flutter/material.dart';
@@ -90,7 +89,6 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
           isLoading = false;
         });
       }
-      
     } catch (e) {
       showSnackBarGlobal("error", "$e");
     }
