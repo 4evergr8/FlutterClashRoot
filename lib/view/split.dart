@@ -35,7 +35,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
   }
 
   Future<void> _loadAppsAndYaml() async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
       final override = await readYamlAsMap(overridePath);
