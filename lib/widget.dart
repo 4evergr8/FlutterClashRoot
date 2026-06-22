@@ -83,10 +83,7 @@ VoidCallback showSnackBarGlobal(String type, String text) {
             SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(width: 8),
             Expanded(child: Text(text)),
