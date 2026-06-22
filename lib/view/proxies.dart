@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:clashroot/main.dart';
-import 'package:flutter/material.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/widget.dart';
+import 'package:flutter/material.dart';
 
 class ProxiesView extends StatefulWidget {
   const ProxiesView({super.key});
@@ -140,11 +139,8 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         setState(() {});
       }
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
     } finally {
-     
-
       if (mounted) {
         setState(() => isTesting = false);
       }
