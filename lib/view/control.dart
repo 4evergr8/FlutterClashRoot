@@ -61,7 +61,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -75,7 +75,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -97,7 +97,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -119,7 +119,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     }
   }
