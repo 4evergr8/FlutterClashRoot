@@ -63,7 +63,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runTest() async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await testClash();
       if (!mounted) return;
