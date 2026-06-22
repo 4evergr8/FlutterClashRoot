@@ -128,6 +128,6 @@ VoidCallback showSnackBarGlobal(String type, String text) {
   }
 
   return () {
-    scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+    
   };
 }
