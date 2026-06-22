@@ -127,7 +127,5 @@ VoidCallback showSnackBarGlobal(String type, String text) {
     );
   }
 
-  return () {
-    
-  };
+  return () {};
 }
