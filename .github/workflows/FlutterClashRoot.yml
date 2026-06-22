@@ -42,10 +42,10 @@ jobs:
       - name: Download latest stable ClashRoot release
         run: |
           RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest)
-          MIHOMO_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?mihomo-android-arm64-v8-v[0-9]+\.[0-9]+\.[0-9]+\.gz(?=")' | head -n 1)
-          echo "Downloading Mihomo: $MIHOMO_URL"
-          curl -L -o ClashRoot/mihomo.gz "$MIHOMO_URL"
-          gunzip -f ClashRoot/mihomo.gz
+          CLASH_URL=$(echo "$RELEASE_JSON" | grep -oP '"browser_download_url": "\K.*?mihomo-android-arm64-v8-v[0-9]+\.[0-9]+\.[0-9]+\.gz(?=")' | head -n 1)
+          echo "Downloading Clash: $CLASH_URL"
+          curl -L -o ClashRoot/clash.gz "$CLASH_URL"
+          gunzip -f ClashRoot/clash.gz
 
       - name: Download latest stable MetaCubeXD release
         run: |
