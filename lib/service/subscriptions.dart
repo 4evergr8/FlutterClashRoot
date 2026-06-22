@@ -1,16 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:crypto/crypto.dart';
+
 import 'package:clashroot/service/path.dart';
-import 'package:yaml_codec/yaml_codec.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart';
+import 'package:yaml_codec/yaml_codec.dart';
 
 dynamic _convertYaml(dynamic node) {
   if (node is YamlMap) {
-    return Map<String, dynamic>.fromEntries(node.entries.map((e) => MapEntry(e.key.toString(), _convertYaml(e.value))));
+    return Map<String, dynamic>.fromEntries(
+      node.entries.map((e) => MapEntry(e.key.toString(), _convertYaml(e.value))),
+    );
   } else if (node is YamlList) {
     return node.map(_convertYaml).toList();
   }
@@ -56,14 +59,24 @@ Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic>
   return result;
 }
 
-
 Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, int timeout) async {
   final dio = Dio();
   final dir = await getApplicationDocumentsDirectory();
   final filePath = '${dir.path}/$id.yaml';
 
   try {
-    final response = await dio.download(url, filePath, options: Options(responseType: ResponseType.bytes, followRedirects: true, headers: {'User-Agent': ua}, connectTimeout: Duration(milliseconds: timeout), sendTimeout: Duration(milliseconds: timeout), receiveTimeout: Duration(milliseconds: timeout)));
+    final response = await dio.download(
+      url,
+      filePath,
+      options: Options(
+        responseType: ResponseType.bytes,
+        followRedirects: true,
+        headers: {'User-Agent': ua},
+        connectTimeout: Duration(milliseconds: timeout),
+        sendTimeout: Duration(milliseconds: timeout),
+        receiveTimeout: Duration(milliseconds: timeout),
+      ),
+    );
 
     final headers = response.headers.map;
     String label = id;
@@ -135,7 +148,16 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
       throw Exception('root 拷贝失败: ${result.stderr}');
     }
 
-    return {'id': id, 'link': url, 'label': label, 'upload': upload, 'download': downloadBytes, 'total': total, 'expire': expire, 'update': DateTime.now().millisecondsSinceEpoch.toString()};
+    return {
+      'id': id,
+      'link': url,
+      'label': label,
+      'upload': upload,
+      'download': downloadBytes,
+      'total': total,
+      'expire': expire,
+      'update': DateTime.now().millisecondsSinceEpoch.toString(),
+    };
   } catch (e) {
     final f = File(filePath);
     if (await f.exists()) {
@@ -144,6 +166,7 @@ Future<Map<String, dynamic>> downloadYamlFile(String url, String ua, String id, 
     rethrow;
   }
 }
+
 String sha256Prefix(String input) {
   // 1. 转成字节
   final bytes = utf8.encode(input);
@@ -176,13 +199,9 @@ String canonicalUrl(String input) {
   // 4. query 不变（保留原语义）
   final query = uri.query;
 
-  return Uri(
-    scheme: scheme,
-    host: host,
-    path: path,
-    query: query.isEmpty ? null : query,
-  ).toString();
+  return Uri(scheme: scheme, host: host, path: path, query: query.isEmpty ? null : query).toString();
 }
+
 String formatTimeAgo(String timestampMsStr) {
   final pastMs = int.tryParse(timestampMsStr);
   if (pastMs == null) return '时间格式错误';
@@ -217,6 +236,7 @@ String formatTimeAgo(String timestampMsStr) {
   if (parts.isEmpty) return '刚刚';
   return '${parts.join()}前';
 }
+
 String formatSize(int bytes) {
   const mb = 1024 * 1024;
   const gb = mb * 1024;
