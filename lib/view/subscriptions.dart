@@ -45,7 +45,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _onSubscriptionTap(String id) async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       final settings = await readYamlAsMap(settingsPath);
 
@@ -78,7 +78,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _refreshSubscriptions() async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
@@ -146,7 +146,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _loadSubscriptions() async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
       final data = await readYamlAsMap(subscriptionsPath);
@@ -187,7 +187,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
     if (confirm != true) return;
 
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       subscriptions.removeWhere((s) => s['id'] == sub['id']);
       final data = {'subscriptions': subscriptions};
@@ -249,7 +249,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     if (result == null || result.trim().isEmpty) return;
     if (!mounted) return;
 
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
       final settings = await readYamlAsMap(settingsPath);
@@ -523,7 +523,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                           setState(() => sub['favorite'] = value);
                                           applySubscriptions(subscriptions);
 
-                                          final close=showSnackBarGlobal("load", "请稍候...");
+                                          final close = showSnackBarGlobal("load", "请稍候...");
                                           try {
                                             final data = await readYamlAsMap(subscriptionsPath);
                                             final list =
@@ -559,7 +559,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                           switch (value) {
                                             case 1:
-                                              final close=showSnackBarGlobal("load", "请稍候...");
+                                              final close = showSnackBarGlobal("load", "请稍候...");
                                               try {
                                                 final downloadResult = await downloadYamlFile(
                                                   sub['link'],
