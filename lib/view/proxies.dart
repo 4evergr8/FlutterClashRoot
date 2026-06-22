@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clashroot/main.dart';
 import 'package:flutter/material.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
@@ -56,12 +57,12 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         setState(() {});
       }
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
+      showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _testDelay() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
 
     if (mounted) {
       setState(() => isTesting = true);
@@ -139,9 +140,10 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         setState(() {});
       }
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
     } finally {
-      close();
+     
 
       if (mounted) {
         setState(() => isTesting = false);
