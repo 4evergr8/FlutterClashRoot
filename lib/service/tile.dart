@@ -10,7 +10,7 @@ Tile onTileClicked(Tile tile) {
   final isActive = tile.tileStatus == TileStatus.active;
 
   if (isActive) {
-    stopMihomo();
+    stopClash();
 
     tile
       ..tileStatus = TileStatus.inactive
@@ -18,7 +18,7 @@ Tile onTileClicked(Tile tile) {
       ..drawableName = "alarm_off"
       ..contentDescription = "Clash核心已停止";
   } else {
-    startMihomo();
+    startClash();
 
     tile
       ..tileStatus = TileStatus.active
@@ -32,9 +32,9 @@ Tile onTileClicked(Tile tile) {
 
 @pragma('vm:entry-point')
 Tile? onTileAdded(Tile tile) {
-  tile.label = "mihomo";
+  tile.label = "ClashRoot";
   tile.drawableName = "alarm_off";
-  tile.contentDescription = "mihomo 核心控制";
+  tile.contentDescription = "Clash核心控制";
   tile.tileStatus = TileStatus.inactive;
   return tile;
 }
