@@ -61,7 +61,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   }
 
   Future<void> _testDelay() async {
-    final close=showSnackBarGlobal("load", "请稍候...");
+    final close = showSnackBarGlobal("load", "请稍候...");
 
     if (mounted) {
       setState(() => isTesting = true);
