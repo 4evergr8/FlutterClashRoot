@@ -1,5 +1,5 @@
-import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:clashroot/service/control.dart';
+import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
 /// =======================
 /// Tile callbacks
