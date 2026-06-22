@@ -53,7 +53,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runCheck() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final result = await checkMihomo();
+      final result = await checkClash();
       if (!mounted) return;
       setState(() {
         // 4. 更新文本时，直接修改 text 属性
@@ -69,7 +69,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runTest() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final result = await testMihomo();
+      final result = await testClash();
       if (!mounted) return;
       setState(() {
         _displayController.text = result;
@@ -81,10 +81,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
     }
   }
 
-  Future<void> _startMihomo() async {
+  Future<void> _startClash() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final result = await startMihomo();
+      final result = await startClash();
       if (!mounted) return;
       setState(() {
         _startController.text = result;
@@ -104,10 +104,10 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
     }
   }
 
-  Future<void> _stopMihomo() async {
+  Future<void> _stopClash() async {
     final close = await showLoadingDialogGlobal();
     try {
-      final result = await stopMihomo();
+      final result = await stopClash();
       if (!mounted) return;
       setState(() {
         _stopController.text = result;
@@ -141,7 +141,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: _startMihomo,
+                  onPressed: _startClash,
                   icon: const Icon(Icons.restart_alt_outlined),
                   label: const Text('重启'),
                   style: ElevatedButton.styleFrom(
@@ -171,7 +171,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: _stopMihomo,
+                  onPressed: _stopClash,
                   icon: const Icon(Icons.stop),
                   label: const Text('停止'),
                   style: ElevatedButton.styleFrom(
