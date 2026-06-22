@@ -74,7 +74,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       settings["select"] = id;
       await writeYamlFromMap(settings, settingsPath);
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -139,7 +139,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(newList);
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '刷新订阅失败: $e');
     } 
   }
@@ -158,12 +158,12 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         sub['select'] = sub['id'] == select;
       }
       applySubscriptions(subscriptions);
+      
     } catch (e) {
       subscriptions = [];
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } finally {
-      
       if (mounted) setState(() => isLoading = false);
     }
   }
@@ -198,8 +198,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
       applySubscriptions(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+      
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -312,8 +313,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(list);
 
       await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
+      
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } 
   }
@@ -531,8 +533,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                               list[index]['favorite'] = value;
                                               await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
                                             }
+                                            
                                           } catch (e) {
-                                            scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+                                            
                                             showSnackBarGlobal("error", '保存失败: $e');
                                           } 
                                         },
@@ -571,8 +574,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                                 }, subscriptionsPath);
 
                                                 setState(() {});
+                                                
                                               } catch (e) {
-                                                scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+                                                
                                                 showSnackBarGlobal("error", '刷新失败: $e');
                                               } 
                                               break;
