@@ -1,3 +1,4 @@
+import 'package:clashroot/main.dart';
 import 'package:flutter/material.dart';
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
@@ -51,7 +52,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runCheck() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await checkClash();
       if (!mounted) return;
@@ -60,14 +61,13 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   Future<void> _runTest() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await testClash();
       if (!mounted) return;
@@ -75,14 +75,13 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   Future<void> _startClash() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await startClash();
       if (!mounted) return;
@@ -98,14 +97,13 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   Future<void> _stopClash() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await stopClash();
       if (!mounted) return;
@@ -121,9 +119,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
     }
   }
 
