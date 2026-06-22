@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'package:clashroot/main.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/widget.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class SubscriptionView extends StatefulWidget {
   const SubscriptionView({super.key});
@@ -19,10 +19,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   bool get wantKeepAlive => false;
   List<Map<String, dynamic>> subscriptions = [];
   bool isLoading = true;
-
-
-
-
 
   void applySubscriptions(List<Map<String, dynamic>> list) {
     final normalized = list.map((e) => Map<String, dynamic>.from(e)).toList();
@@ -74,9 +70,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       settings["select"] = id;
       await writeYamlFromMap(settings, settingsPath);
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   Future<void> _refreshSubscriptions() async {
@@ -139,9 +134,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(newList);
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
     } catch (e) {
-      
       showSnackBarGlobal("error", '刷新订阅失败: $e');
-    } 
+    }
   }
 
   Future<void> _loadSubscriptions() async {
@@ -158,10 +152,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         sub['select'] = sub['id'] == select;
       }
       applySubscriptions(subscriptions);
-      
     } catch (e) {
       subscriptions = [];
-      
+
       showSnackBarGlobal("error", '$e');
     } finally {
       if (mounted) setState(() => isLoading = false);
@@ -198,11 +191,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
       applySubscriptions(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
-      
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   Future<void> _addSubscription() async {
@@ -260,11 +251,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
       final existingIds = list.map((e) => e['id']).toSet();
 
-      final inputLinks = result
-          .split('\n')
-          .map((e) => canonicalUrl(e))
-          .where((e) => e.isNotEmpty)
-          .toList();
+      final inputLinks = result.split('\n').map((e) => canonicalUrl(e)).where((e) => e.isNotEmpty).toList();
 
       // 输入内部去重（保留顺序）
       final seen = <String>{};
@@ -313,11 +300,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(list);
 
       await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
-      
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   @override
@@ -347,6 +332,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                       final v = value * 100 ~/ totalValue;
                       return v.clamp(0, 100);
                     }
+
                     final isSelected = sub['select'] == true;
 
                     return Card(
@@ -390,11 +376,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                             final r = count == 0 ? 0.0 : alive / count;
 
-                                            if (r >= 2 / 3) return cs.primary;      // 健康
-                                            if (r >= 1 / 3) return cs.secondary;    // 一般
-                                            if (r > 0) return cs.tertiary;          // 较差
+                                            if (r >= 2 / 3) return cs.primary; // 健康
+                                            if (r >= 1 / 3) return cs.secondary; // 一般
+                                            if (r > 0) return cs.tertiary; // 较差
 
-                                            return cs.error;                        // 全挂
+                                            return cs.error; // 全挂
                                           })(),
                                       borderRadius: BorderRadius.circular(999),
                                     ),
@@ -413,11 +399,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                               final r = count == 0 ? 0.0 : alive / count;
 
-                                              if (r >= 2 / 3) return cs.onPrimary;     // 健康
-                                              if (r >= 1 / 3) return cs.onSecondary;   // 一般
-                                              if (r > 0) return cs.onTertiary;         // 较差
+                                              if (r >= 2 / 3) return cs.onPrimary; // 健康
+                                              if (r >= 1 / 3) return cs.onSecondary; // 一般
+                                              if (r > 0) return cs.onTertiary; // 较差
 
-                                              return cs.onError;                      // 全挂
+                                              return cs.onError; // 全挂
                                             })(),
                                       ),
                                     ),
@@ -533,11 +519,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                               list[index]['favorite'] = value;
                                               await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
                                             }
-                                            
                                           } catch (e) {
-                                            
                                             showSnackBarGlobal("error", '保存失败: $e');
-                                          } 
+                                          }
                                         },
                                       ),
 
@@ -574,11 +558,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                                 }, subscriptionsPath);
 
                                                 setState(() {});
-                                                
                                               } catch (e) {
-                                                
                                                 showSnackBarGlobal("error", '刷新失败: $e');
-                                              } 
+                                              }
                                               break;
 
                                             case 2:
