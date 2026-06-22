@@ -88,7 +88,7 @@ class MyTaskHandler extends TaskHandler {
     // 如果后台还未读取完配置文件，显示正在初始化
     if (!_isInitialized) {
       FlutterForegroundTask.updateService(
-        notificationTitle: 'ClashRoot网速监控',
+        notificationTitle: 'Clash网速监控',
         notificationText: '正在读取核心配置...',
       );
       return;
@@ -104,7 +104,7 @@ class MyTaskHandler extends TaskHandler {
       );
     } else {
       FlutterForegroundTask.updateService(
-        notificationTitle: 'ClashRoot网速监控',
+        notificationTitle: 'Clash网速监控',
         notificationText: '正在连接核心...',
       );
     }
@@ -133,8 +133,8 @@ void startMonitorService() async {
   // 1. 初始化配置
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
-      channelId: 'mihomo_channel',
-      channelName: 'mihomo 核心监控',
+      channelId: 'clash_channel',
+      channelName: 'Clash核心监控',
       channelDescription: '用于展示核心流量与连接状态的前台服务通知',
       channelImportance: NotificationChannelImportance.LOW,
       priority: NotificationPriority.LOW,
