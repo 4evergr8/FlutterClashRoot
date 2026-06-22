@@ -1,8 +1,8 @@
+import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_device_apps/flutter_device_apps.dart';
-import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/subscriptions.dart';
 
 import '../widget.dart';
 
@@ -35,7 +35,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
   }
 
   Future<void> _loadAppsAndYaml() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
 
     try {
       final override = await readYamlAsMap(overridePath);
@@ -89,8 +89,8 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
           isLoading = false;
         });
       }
-    } finally {
-      close();
+    } catch (e) {
+      showSnackBarGlobal("error", "$e");
     }
   }
 
