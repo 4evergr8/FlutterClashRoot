@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:clashroot/service/notification.dart';
 import 'package:clashroot/service/tile.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
+
 import 'theme/theme.dart';
 import 'theme/util.dart';
 import 'widget.dart';
-
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
@@ -14,11 +14,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  QuickSettings.setup(
-    onTileClicked: onTileClicked,
-    onTileAdded: onTileAdded,
-    onTileRemoved: onTileRemoved,
-  );
+  QuickSettings.setup(onTileClicked: onTileClicked, onTileAdded: onTileAdded, onTileRemoved: onTileRemoved);
 
   runApp(const MyApp());
   startMonitorService();
