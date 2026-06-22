@@ -85,9 +85,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
 }
 
 
-
-
-
 void showSnackBarGlobal(String type, String text) {
   final messenger = scaffoldMessengerKey.currentState;
   if (messenger == null) return;
@@ -103,7 +100,10 @@ void showSnackBarGlobal(String type, String text) {
             SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme
+                  .of(context)
+                  .colorScheme
+                  .primary),
             ),
             const SizedBox(width: 8),
             Expanded(child: Text(text)),
@@ -120,7 +120,10 @@ void showSnackBarGlobal(String type, String text) {
           },
           child: Row(
             children: [
-              Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.primary),
+              Icon(Icons.check_circle, size: 16, color: Theme
+                  .of(context)
+                  .colorScheme
+                  .primary),
               const SizedBox(width: 3),
               Expanded(child: Text(text)),
             ],
@@ -137,7 +140,10 @@ void showSnackBarGlobal(String type, String text) {
           },
           child: Row(
             children: [
-              Icon(Icons.error, size: 16, color: Theme.of(context).colorScheme.error),
+              Icon(Icons.error, size: 16, color: Theme
+                  .of(context)
+                  .colorScheme
+                  .error),
               const SizedBox(width: 8),
               Expanded(child: Text(text)),
             ],
