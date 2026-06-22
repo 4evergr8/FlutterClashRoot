@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:clashroot/service/path.dart';
 
-Future<String> stopMihomo() async {
+Future<String> stopClash() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "kill"]);
   return (result.stdout.toString() + result.stderr.toString()).trim();
 }
 
-Future<String> startMihomo() async {
+Future<String> startClash() async {
   await Process.run("su", ["-c", "sh", scriptPath, "kill"]);
   final process = await Process.start("su", ["-c", "sh", scriptPath, "start"]);
   process.stdout.drain();
@@ -15,12 +15,12 @@ Future<String> startMihomo() async {
   return "启动完毕";
 }
 
-Future<String> testMihomo() async {
+Future<String> testClash() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "test"]);
   return (result.stdout.toString() + result.stderr.toString()).trim();
 }
 
-Future<String> checkMihomo() async {
+Future<String> checkClash() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "check"]);
   return (result.stdout.toString() + result.stderr.toString()).trim();
 }
