@@ -1,5 +1,5 @@
 name: clashroot
-description: "simple mihomo for root users"
+description: "simple clash control for root users"
 publish_to: 'none'
 
 flutter_native_splash:
