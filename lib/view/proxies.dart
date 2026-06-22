@@ -140,7 +140,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         setState(() {});
       }
     } catch (e) {
-      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      
       showSnackBarGlobal("error", '$e');
     } finally {
      
