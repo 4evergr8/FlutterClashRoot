@@ -1,9 +1,8 @@
-import 'package:clashroot/main.dart';
-import 'package:flutter/material.dart';
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/widget.dart';
+import 'package:flutter/material.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -22,7 +21,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   late final TextEditingController _startController;
   late final TextEditingController _stopController;
   late final TextEditingController _displayController;
-
 
   @override
   void initState() {
@@ -61,9 +59,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   Future<void> _runTest() async {
@@ -75,9 +72,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         _displayController.text = result;
       });
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   Future<void> _startClash() async {
@@ -97,9 +93,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
-    } 
+    }
   }
 
   Future<void> _stopClash() async {
@@ -119,7 +114,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
         ),
       );
     } catch (e) {
-      
       showSnackBarGlobal("error", '$e');
     }
   }
