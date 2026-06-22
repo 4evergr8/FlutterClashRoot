@@ -7,7 +7,7 @@
 <h3 align="center">ClashRoot</h3>
 
 <p align="center">
-  基于Flutter框架的mihomo内核控制器,仅限KernelSU<br>
+  基于Flutter框架的Clash内核控制器,仅限KernelSU<br>
   订阅切换、配置覆写、内核启停<br>
   <a href="https://github.com/4evergr8/ClashRoot/issues/new">🐞故障报告</a>
   ·
