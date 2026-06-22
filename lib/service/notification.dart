@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:convert';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'dart:io';
+
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
 int port = 9090;
@@ -16,7 +17,6 @@ class TrafficState {
   bool connected = false;
 }
 
-
 class WsManager {
   WebSocket? _ws;
   final TrafficState state;
@@ -24,13 +24,10 @@ class WsManager {
   WsManager(this.state);
 
   void connect() {
-    _ws = WebSocket(
-      Uri.parse('ws://127.0.0.1:$port/traffic'),
-      backoff: const ConstantBackoff(Duration(seconds: 1)),
-    );
+    _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'), backoff: const ConstantBackoff(Duration(seconds: 1)));
 
     _ws!.messages.listen(
-          (event) {
+      (event) {
         final data = jsonDecode(event);
 
         state.up = data['up'] ?? 0;
@@ -54,20 +51,16 @@ class WsManager {
   }
 }
 
-
 class MyTaskHandler extends TaskHandler {
   final TrafficState state = TrafficState();
   late final WsManager ws;
-
 
   bool _isInitialized = false;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-
       final settings = await readYamlAsMap(settingsPath);
-
 
       port = settings['port'];
 
@@ -82,15 +75,11 @@ class MyTaskHandler extends TaskHandler {
     }
   }
 
-
   @override
   void onRepeatEvent(DateTime timestamp) {
     // 如果后台还未读取完配置文件，显示正在初始化
     if (!_isInitialized) {
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'Clash网速监控',
-        notificationText: '正在读取核心配置...',
-      );
+      FlutterForegroundTask.updateService(notificationTitle: 'Clash网速监控', notificationText: '正在读取核心配置...');
       return;
     }
 
@@ -98,20 +87,16 @@ class MyTaskHandler extends TaskHandler {
       final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
       final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
 
-      FlutterForegroundTask.updateService(
-        notificationTitle: speedText,
-        notificationText: totalText,
-      );
+      FlutterForegroundTask.updateService(notificationTitle: speedText, notificationText: totalText);
     } else {
-      FlutterForegroundTask.updateService(
-        notificationTitle: 'Clash网速监控',
-        notificationText: '正在连接核心...',
-      );
+      FlutterForegroundTask.updateService(notificationTitle: 'Clash网速监控', notificationText: '正在连接核心...');
     }
   }
+
   @override
   Future<void> onNotificationButtonPressed(String id) async {
-    await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);;
+    await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);
+    ;
   }
 
   @override
@@ -127,7 +112,6 @@ class MyTaskHandler extends TaskHandler {
 void startCallback() {
   FlutterForegroundTask.setTaskHandler(MyTaskHandler());
 }
-
 
 void startMonitorService() async {
   // 1. 初始化配置
@@ -149,9 +133,7 @@ void startMonitorService() async {
 
   // 2. 直接启动服务即可，不需要 withReceivePort，也不需要 sendDataToTask
   await FlutterForegroundTask.startService(
-    notificationButtons: [
-      const NotificationButton(id: 'close', text: '关闭监控'),
-    ],
+    notificationButtons: [const NotificationButton(id: 'close', text: '关闭监控')],
     serviceTypes: [ForegroundServiceTypes.dataSync],
     notificationTitle: '服务已启动',
     notificationText: '准备监控...',
