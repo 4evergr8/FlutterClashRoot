@@ -146,8 +146,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _loadSubscriptions() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
-
     try {
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
@@ -159,10 +157,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         sub['select'] = sub['id'] == select;
       }
       applySubscriptions(subscriptions);
-      close();
-      showSnackBarGlobal("success", "加载成功");
     } catch (e) {
-      close();
       subscriptions = [];
 
       showSnackBarGlobal("error", '$e');
@@ -593,7 +588,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                             case 3:
                                               await Clipboard.setData(ClipboardData(text: sub['link']));
-                                              showSnackBarGlobal("error", '链接已复制');
+                                              showSnackBarGlobal("success", '链接已复制');
                                               break;
                                           }
                                         },
