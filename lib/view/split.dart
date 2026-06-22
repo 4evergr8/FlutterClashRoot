@@ -89,6 +89,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
           isLoading = false;
         });
       }
+      close();
     } catch (e) {
       close();
       showSnackBarGlobal("error", "$e");
