@@ -1,4 +1,4 @@
-final String mainPath='/data/adb/modules/ClashRoot';
+final String mainPath = '/data/adb/modules/ClashRoot';
 final String subscriptionsPath = '$mainPath/subscriptions.yaml';
 final String configPath = '$mainPath/config.yaml';
 final String settingsPath = '$mainPath/settings.yaml';
