@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:clashroot/view/proxies.dart';
 import 'package:clashroot/main.dart';
+import 'package:clashroot/view/control.dart';
+import 'package:clashroot/view/proxies.dart';
 import 'package:clashroot/view/split.dart';
 import 'package:clashroot/view/subscriptions.dart';
-import 'package:clashroot/view/control.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -17,12 +17,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
   late final PageController _pageController;
 
-  static final List<Widget> _widgetOptions = <Widget>[
-    SubscriptionView(),
-    ProxiesView(),
-    SplitView(),
-    ControlView(),
-  ];
+  static final List<Widget> _widgetOptions = <Widget>[SubscriptionView(), ProxiesView(), SplitView(), ControlView()];
 
   @override
   void initState() {
@@ -58,21 +53,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle),
-            label: '订阅',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.link),
-            label: '节点',
-          ),BottomNavigationBarItem(
-            icon: Icon(Icons.call_split),
-            label: '分流',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.power_settings_new),
-            label: '控制',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: '订阅'),
+          BottomNavigationBarItem(icon: Icon(Icons.link), label: '节点'),
+          BottomNavigationBarItem(icon: Icon(Icons.call_split), label: '分流'),
+          BottomNavigationBarItem(icon: Icon(Icons.power_settings_new), label: '控制'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: colorScheme.primary,
@@ -84,10 +68,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
   }
 }
 
-
-void showSnackBarGlobal(String type, String text) {
+VoidCallback showSnackBarGlobal(String type, String text) {
   final messenger = scaffoldMessengerKey.currentState;
-  if (messenger == null) return;
+  if (messenger == null) return () {};
 
   final context = messenger.context;
 
@@ -100,10 +83,7 @@ void showSnackBarGlobal(String type, String text) {
             SizedBox(
               width: 14,
               height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Theme
-                  .of(context)
-                  .colorScheme
-                  .primary),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(width: 8),
             Expanded(child: Text(text)),
@@ -120,10 +100,7 @@ void showSnackBarGlobal(String type, String text) {
           },
           child: Row(
             children: [
-              Icon(Icons.check_circle, size: 16, color: Theme
-                  .of(context)
-                  .colorScheme
-                  .primary),
+              Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.primary),
               const SizedBox(width: 3),
               Expanded(child: Text(text)),
             ],
@@ -140,10 +117,7 @@ void showSnackBarGlobal(String type, String text) {
           },
           child: Row(
             children: [
-              Icon(Icons.error, size: 16, color: Theme
-                  .of(context)
-                  .colorScheme
-                  .error),
+              Icon(Icons.error, size: 16, color: Theme.of(context).colorScheme.error),
               const SizedBox(width: 8),
               Expanded(child: Text(text)),
             ],
@@ -152,4 +126,8 @@ void showSnackBarGlobal(String type, String text) {
       ),
     );
   }
+
+  return () {
+    scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+  };
 }
