@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:clashroot/main.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -48,7 +49,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _onSubscriptionTap(String id) async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final settings = await readYamlAsMap(settingsPath);
 
@@ -73,14 +74,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       settings["select"] = id;
       await writeYamlFromMap(settings, settingsPath);
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   Future<void> _refreshSubscriptions() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       final data = await readYamlAsMap(subscriptionsPath);
       final settings = await readYamlAsMap(settingsPath);
@@ -102,7 +102,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               final downloadResult = await downloadYamlFile(sub['link'], ua, id, timeout);
               return {'id': id, 'data': downloadResult};
             } catch (e) {
-              showErrorSnackBarGlobal('${sub['label'] ?? id} 失败: $e');
+              showSnackBarGlobal("error", '${sub['label'] ?? id} 失败: $e');
               return null;
             }
           }).toList();
@@ -139,14 +139,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(newList);
       await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
     } catch (e) {
-      showErrorSnackBarGlobal('刷新订阅失败: $e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '刷新订阅失败: $e');
+    } 
   }
 
   Future<void> _loadSubscriptions() async {
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
 
     try {
       final data = await readYamlAsMap(subscriptionsPath);
@@ -161,9 +160,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(subscriptions);
     } catch (e) {
       subscriptions = [];
-      showErrorSnackBarGlobal('$e');
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
     } finally {
-      close();
+      
       if (mounted) setState(() => isLoading = false);
     }
   }
@@ -184,7 +184,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
     if (confirm != true) return;
 
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
     try {
       subscriptions.removeWhere((s) => s['id'] == sub['id']);
       final data = {'subscriptions': subscriptions};
@@ -199,10 +199,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       applySubscriptions(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   Future<void> _addSubscription() async {
@@ -245,7 +244,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     if (result == null || result.trim().isEmpty) return;
     if (!mounted) return;
 
-    final close = await showLoadingDialogGlobal();
+    showSnackBarGlobal("load", "请稍候...");
 
     try {
       final settings = await readYamlAsMap(settingsPath);
@@ -283,7 +282,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         final id = sha256Prefix(link);
 
         if (existingIds.contains(id)) {
-          showErrorSnackBarGlobal('订阅已存在: $link');
+          showSnackBarGlobal("error", '订阅已存在: $link');
         } else {
           newLinks.add(link);
         }
@@ -297,7 +296,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               final r = await downloadYamlFile(canonicalUrl(link), ua, id, timeout);
               return r;
             } catch (e) {
-              showErrorSnackBarGlobal('$link 添加失败: $e');
+              showSnackBarGlobal("error", '$link 添加失败: $e');
               return null;
             }
           }).toList();
@@ -314,10 +313,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
       await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
     } catch (e) {
-      showErrorSnackBarGlobal('$e');
-    } finally {
-      close();
-    }
+      scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+      showSnackBarGlobal("error", '$e');
+    } 
   }
 
   @override
@@ -519,7 +517,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                           setState(() => sub['favorite'] = value);
                                           applySubscriptions(subscriptions);
 
-                                          final close = await showLoadingDialogGlobal();
+                                          showSnackBarGlobal("load", "请稍候...");
                                           try {
                                             final data = await readYamlAsMap(subscriptionsPath);
                                             final list =
@@ -534,10 +532,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                               await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
                                             }
                                           } catch (e) {
-                                            showErrorSnackBarGlobal('保存失败: $e');
-                                          } finally {
-                                            close();
-                                          }
+                                            scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+                                            showSnackBarGlobal("error", '保存失败: $e');
+                                          } 
                                         },
                                       ),
 
@@ -554,7 +551,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                           switch (value) {
                                             case 1:
-                                              final close = await showLoadingDialogGlobal();
+                                              showSnackBarGlobal("load", "请稍候...");
                                               try {
                                                 final downloadResult = await downloadYamlFile(
                                                   sub['link'],
@@ -575,10 +572,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                                 setState(() {});
                                               } catch (e) {
-                                                showErrorSnackBarGlobal('刷新失败: $e');
-                                              } finally {
-                                                close();
-                                              }
+                                                scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
+                                                showSnackBarGlobal("error", '刷新失败: $e');
+                                              } 
                                               break;
 
                                             case 2:
@@ -587,7 +583,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                             case 3:
                                               await Clipboard.setData(ClipboardData(text: sub['link']));
-                                              showErrorSnackBarGlobal('链接已复制');
+                                              showSnackBarGlobal("error", '链接已复制');
                                               break;
                                           }
                                         },
