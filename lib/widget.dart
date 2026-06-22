@@ -87,41 +87,63 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
 
 
-Future<VoidCallback> showLoadingDialogGlobal() async {
-  final overlay = navigatorKey.currentState?.overlay;
-  if (overlay == null) return () {};
 
-  late OverlayEntry overlayEntry;
-  overlayEntry = OverlayEntry(
-    builder: (_) => Positioned(
-      top: 0,
-      left: 0,
-      right: 0,
-      child: Material(
-        color: Colors.transparent,
-        child: LinearProgressIndicator(
-          minHeight: 4,
-          backgroundColor: Theme.of(navigatorKey.currentContext!).colorScheme.primaryContainer,
+void showSnackBarGlobal(String type, String text) {
+  final messenger = scaffoldMessengerKey.currentState;
+  if (messenger == null) return;
+
+  final context = messenger.context;
+
+  if (type == "load") {
+    messenger.showSnackBar(
+      SnackBar(
+        duration: const Duration(hours: 1),
+        content: Row(
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(text)),
+          ],
         ),
       ),
-    ),
-  );
-
-  overlay.insert(overlayEntry);
-  return () => overlayEntry.remove();
-}
-void showErrorSnackBarGlobal(String message) {
-  final ctx = navigatorKey.currentContext;
-  if (ctx == null) return;
-
-  ScaffoldMessenger.of(ctx).showSnackBar(
-    SnackBar(
-      content: GestureDetector(
-        onTap: () {
-          Clipboard.setData(ClipboardData(text: message));
-        },
-        child: Text(message),
+    );
+  } else if (type == "success") {
+    messenger.showSnackBar(
+      SnackBar(
+        content: GestureDetector(
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: text));
+          },
+          child: Row(
+            children: [
+              Icon(Icons.check_circle, size: 16, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 3),
+              Expanded(child: Text(text)),
+            ],
+          ),
+        ),
       ),
-    ),
-  );
+    );
+  } else {
+    messenger.showSnackBar(
+      SnackBar(
+        content: GestureDetector(
+          onTap: () {
+            Clipboard.setData(ClipboardData(text: text));
+          },
+          child: Row(
+            children: [
+              Icon(Icons.error, size: 16, color: Theme.of(context).colorScheme.error),
+              const SizedBox(width: 8),
+              Expanded(child: Text(text)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
