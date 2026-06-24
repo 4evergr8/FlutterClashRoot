@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:web_socket_client/web_socket_client.dart';
@@ -49,7 +49,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-      final settings = await readYamlAsMap(settingsPath);
+      final settings = await yamlRead(settingsPath);
 
       port = settings['port'];
 
