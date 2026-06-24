@@ -41,7 +41,12 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   @override
   void initState() {
     super.initState();
-    _loadSubscriptions();
+    _init();
+  }
+  Future<void> _init() async {
+    subscriptions = await loadSubscriptions();
+    if (!mounted) return;
+    setState(() {});
   }
 
   Future<void> _onSubscriptionTap(String id) async {
@@ -145,26 +150,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     }
   }
 
-  Future<void> _loadSubscriptions() async {
-    try {
-      final data = await readYamlAsMap(subscriptionsPath);
-      final settings = await readYamlAsMap(settingsPath);
 
-      final list = (data['subscriptions'] as List?) ?? [];
-      subscriptions = List<Map<String, dynamic>>.from(list);
-      final select = settings['select'];
-      for (final sub in subscriptions) {
-        sub['select'] = sub['id'] == select;
-      }
-      applySubscriptions(subscriptions);
-    } catch (e) {
-      subscriptions = [];
-
-      showSnackBarGlobal("error", '$e');
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
-  }
 
   Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
     final confirm = await showDialog<bool>(
