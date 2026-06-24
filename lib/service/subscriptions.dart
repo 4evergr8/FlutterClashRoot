@@ -257,10 +257,7 @@ String formatSize(int bytes) {
   return '${valueTB.toStringAsFixed(1)}T';
 }
 
-
-Future<List<Map<String, dynamic>>> loadSubscriptions([
-  List<Map<String, dynamic>>? input,
-]) async {
+Future<List<Map<String, dynamic>>> subscriptionsLoad([List<Map<String, dynamic>>? input]) async {
   List<Map<String, dynamic>> list;
 
   // 1. 有输入就直接用输入
@@ -286,4 +283,26 @@ Future<List<Map<String, dynamic>>> loadSubscriptions([
   });
 
   return list;
+}
+
+Future<void> subscriptionsSwitch(String id) async {
+  final settings = await readYamlAsMap(settingsPath);
+  final port = settings['port'];
+  final base = await readYamlAsMap("$mainPath/config/$id.yaml");
+  final override = await readYamlAsMap(overridePath);
+  final yaml = overrideMap(base, override);
+  await writeYamlFromMap(yaml, configPath);
+  final dio = Dio();
+  final params = {'force': 'true'};
+  final data = {"path": configPath};
+  await dio.put(
+    'http://127.0.0.1:$port/configs',
+    queryParameters: params,
+    data: data,
+    options: Options(headers: {'Content-Type': 'application/json'}),
+  );
+  await dio.delete(
+    'http://127.0.0.1:$port/connections',
+    options: Options(headers: {'Content-Type': 'application/json'}),
+  );
 }
