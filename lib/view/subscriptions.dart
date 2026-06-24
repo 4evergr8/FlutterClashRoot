@@ -18,24 +18,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   bool get wantKeepAlive => false;
   List<Map<String, dynamic>> subscriptions = [];
 
-  void applySubscriptions(List<Map<String, dynamic>> list) {
-    final normalized = list.map((e) => Map<String, dynamic>.from(e)).toList();
-
-    normalized.sort((a, b) {
-      final aFav = a['favorite'] == true ? 0 : 1;
-      final bFav = b['favorite'] == true ? 0 : 1;
-
-      if (aFav != bFav) return aFav - bFav;
-
-      final al = (a['label'] ?? '').toString();
-      final bl = (b['label'] ?? '').toString();
-      return al.compareTo(bl);
-    });
-
-    subscriptions = normalized;
-    setState(() {});
-  }
-
   @override
   void initState() {
     super.initState();
@@ -43,100 +25,37 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _init() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
-    List<Map<String, dynamic>> result = [];
     try {
-      result = await subscriptionsLoad();
-      close();
+      subscriptions = await subscriptionsLoad();
     } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
-    if (!mounted) return;
-    setState(() {
-      subscriptions = result;
-    });
+    setState(() {});
   }
 
   Future<void> _subscriptionsSwitch(String id) async {
     try {
-      subscriptionsSwitch(id);
       setState(() {
         for (final s in subscriptions) {
           s['select'] = s['id'] == id;
         }
       });
+      subscriptionsSwitch(id);
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
   }
 
-  Future<void> _refreshSubscriptions() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
+  Future<void> _subscriptionsRefresh() async {
     try {
-      final data = await readYamlAsMap(subscriptionsPath);
-      final settings = await readYamlAsMap(settingsPath);
-
-      final list =
-          (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
-
-      final ua = settings['ua'];
-      final timeout = settings['timeout'];
-
-      final Map<String, Map<String, dynamic>> resultMap = {for (var s in list) s['id']: Map<String, dynamic>.from(s)};
-
-      final futures =
-          list.map((sub) async {
-            final id = sub['id'];
-            try {
-              final downloadResult = await downloadYamlFile(sub['link'], ua, id, timeout);
-              return {'id': id, 'data': downloadResult};
-            } catch (e) {
-              close();
-              showSnackBarGlobal("error", '${sub['label'] ?? id} 失败: $e');
-              return null;
-            }
-          }).toList();
-
-      final results = await Future.wait(futures);
-
-      for (var r in results) {
-        if (r == null) continue;
-
-        final id = r['id'];
-        final data = r['data'] as Map<String, dynamic>?;
-
-        if (data == null) continue;
-
-        final old = resultMap[id] ?? {};
-
-        resultMap[id] = {
-          ...old,
-
-          // 只允许这些字段被刷新覆盖
-          'expire': data['expire'] ?? old['expire'],
-          'update': data['update'] ?? old['update'],
-          'upload': data['upload'] ?? old['upload'],
-          'download': data['download'] ?? old['download'],
-          'total': data['total'] ?? old['total'],
-        };
-      }
-
-      final newList = resultMap.values.toList();
-      final select = settings['select'];
-      for (final sub in newList) {
-        sub['select'] = sub['id'] == select;
-      }
-      applySubscriptions(newList);
-      await writeYamlFromMap({'subscriptions': newList}, subscriptionsPath);
-      close();
+      subscriptions = await subscriptionsRefresh(subscriptions);
+      subscriptions = await subscriptionsLoad(subscriptions);
+      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
       showSnackBarGlobal("success", "刷新完成");
     } catch (e) {
-      close();
-      showSnackBarGlobal("error", '刷新订阅失败: $e');
+      showSnackBarGlobal("error", '$e');
     }
+    setState(() {});
   }
 
   Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
@@ -167,7 +86,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         settings['select'] = subscriptions.isNotEmpty ? subscriptions.first['id'] : '';
         await writeYamlFromMap(settings, settingsPath);
       }
-      applySubscriptions(subscriptions);
+      subscriptions = await subscriptionsLoad(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
       close();
       showSnackBarGlobal("success", "已删除");
@@ -280,9 +199,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
           list.add(r);
         }
       }
-      applySubscriptions(list);
+      subscriptions = await subscriptionsLoad(list);
 
-      await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
+      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
       close();
       showSnackBarGlobal("success", "添加完成");
     } catch (e) {
@@ -297,7 +216,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     return Scaffold(
       appBar: AppBar(title: const Text('订阅')),
       body: RefreshIndicator(
-        onRefresh: _refreshSubscriptions,
+        onRefresh: _subscriptionsRefresh,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: subscriptions.length + 1, // 👈 多一个
@@ -478,7 +397,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                   final value = !(sub['favorite'] ?? false);
 
                                   setState(() => sub['favorite'] = value);
-                                  applySubscriptions(subscriptions);
+                                  subscriptions = await subscriptionsLoad(subscriptions);
 
                                   final close = showSnackBarGlobal("load", "请稍候...");
                                   try {
