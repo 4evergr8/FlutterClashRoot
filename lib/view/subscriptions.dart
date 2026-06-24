@@ -73,33 +73,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     setState(() {});
   }
 
-  Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('确认删除'),
-            content: Text('确定删除订阅 "${sub['label']}" 吗？'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-              ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('确认')),
-            ],
-          ),
-    );
-
-    if (confirm != true) return;
-
+  Future<void> _subscriptionDelete(String id) async {
     try {
-      subscriptions.removeWhere((s) => s['id'] == sub['id']);
-      final data = {'subscriptions': subscriptions};
-      await writeYamlFromMap(data, subscriptionsPath);
-      await Process.run('su', ['-c', 'rm -f $mainPath/config/${sub['id']}.yaml']);
-      final settings = await readYamlAsMap(settingsPath);
-
-      if (settings['select'] == sub['id']) {
-        settings['select'] = subscriptions.isNotEmpty ? subscriptions.first['id'] : '';
-        await writeYamlFromMap(settings, settingsPath);
-      }
+      subscriptions.removeWhere((s) => s['id'] == id);
+      await Process.run('su', ['-c', 'rm -f $mainPath/config/$id.yaml']);
       subscriptions = await subscriptionsLoad(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
     } catch (e) {
@@ -355,7 +332,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       break;
 
                                     case 2:
-                                      _deleteSubscription(context, sub);
+                                      final result = await _dialogSubscriptionDelete(context, sub);
+                                      if (result == true) {
+                                        await _subscriptionDelete(sub['id']);
+                                      }
                                       break;
 
                                     case 3:
@@ -401,7 +381,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       floatingActionButton: FloatingActionButton(
         heroTag: 'add',
         onPressed: () async {
-          final links = await _dialogAddSubscription(context);
+          final links = await _dialogSubscriptionAdd(context);
 
           if (links != null && links.trim().isNotEmpty) {
             await _subscriptionsAdd(links);
@@ -413,7 +393,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 }
 
-Future<String?> _dialogAddSubscription(BuildContext context) {
+Future<String?> _dialogSubscriptionAdd(BuildContext context) {
   final controller = TextEditingController();
 
   return showDialog<String>(
@@ -448,5 +428,20 @@ Future<String?> _dialogAddSubscription(BuildContext context) {
         ],
       );
     },
+  );
+}
+
+Future<bool?> _dialogSubscriptionDelete(BuildContext context, Map<String, dynamic> sub) {
+  return showDialog<bool>(
+    context: context,
+    builder:
+        (_) => AlertDialog(
+          title: const Text('确认删除'),
+          content: Text('确定删除订阅 "${sub['label']}" 吗？'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+            ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('确认')),
+          ],
+        ),
   );
 }
