@@ -61,18 +61,14 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   }
 
   Future<void> _subscriptionsSwitch(String id) async {
-    setState(() {
-      for (final s in subscriptions) {
-        s['select'] = s['id'] == id;
-      }
-    });
-    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       subscriptionsSwitch(id);
-      close();
-      showSnackBarGlobal("success", "切换成功");
+      setState(() {
+        for (final s in subscriptions) {
+          s['select'] = s['id'] == id;
+        }
+      });
     } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
   }
