@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +43,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
   Future<void> _loadProxyList() async {
     try {
-      final config = await readYamlAsMap(configPath);
+      final config = await yamlRead(configPath);
 
       final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
@@ -68,11 +68,11 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     }
 
     try {
-      final config = await readYamlAsMap(configPath);
+      final config = await yamlRead(configPath);
 
       final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
-      final settings = await readYamlAsMap(settingsPath);
+      final settings = await yamlRead(settingsPath);
       final id = settings["select"];
 
       final port = settings['port'];
@@ -120,7 +120,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
         delayList = list;
 
-        final subsData = await readYamlAsMap(subscriptionsPath);
+        final subsData = await yamlRead(subscriptionsPath);
 
         final subs =
             (subsData['subscriptions'] is List)
@@ -132,7 +132,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         selectedSub['count'] = totalCount;
         selectedSub['alive'] = successCount;
 
-        await writeYamlFromMap({'subscriptions': subs}, subscriptionsPath);
+        await yamlWrite({'subscriptions': subs}, subscriptionsPath);
       }
 
       if (mounted) {
