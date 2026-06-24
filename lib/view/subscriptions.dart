@@ -46,17 +46,19 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
   Future<void> _init() async {
     final close = showSnackBarGlobal("load", "请稍候...");
+    List<Map<String, dynamic>> result = [];
     try {
-      subscriptions = await loadSubscriptions();
+      result = await loadSubscriptions();
       close();
     } catch (e) {
       close();
       showSnackBarGlobal("error", '$e');
-      subscriptions = [];
     }
-
     if (!mounted) return;
-    setState(() {});
+    setState(() {
+      subscriptions = result;
+      isLoading=false;
+    });
   }
 
   Future<void> _onSubscriptionTap(String id) async {
