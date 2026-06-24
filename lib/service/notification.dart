@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
@@ -72,7 +73,15 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onNotificationButtonPressed(String id) async {
-    await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);
+    if (id == 'close') {
+      await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);
+    } else {
+      final dio = Dio();
+      await dio.delete(
+        'http://127.0.0.1:$port/connections',
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+    }
   }
 
   @override
@@ -104,7 +113,10 @@ void startMonitorService() async {
   );
 
   await FlutterForegroundTask.startService(
-    notificationButtons: [const NotificationButton(id: 'close', text: '关闭监控')],
+    notificationButtons: [
+      const NotificationButton(id: 'delete', text: '断开连接'),
+      const NotificationButton(id: 'close', text: '关闭监控'),
+    ],
     serviceTypes: [ForegroundServiceTypes.dataSync],
     notificationTitle: '服务已启动',
     notificationText: '准备监控...',
