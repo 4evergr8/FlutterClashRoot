@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
+import 'package:clashroot/widget.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart';
@@ -305,4 +306,52 @@ Future<void> subscriptionsSwitch(String id) async {
     'http://127.0.0.1:$port/connections',
     options: Options(headers: {'Content-Type': 'application/json'}),
   );
+}
+
+Future<List<Map<String, dynamic>>> subscriptionsRefresh(List<Map<String, dynamic>> input) async {
+  final settings = await readYamlAsMap(settingsPath);
+
+  final ua = settings['ua'];
+  final timeout = settings['timeout'];
+
+  final Map<String, Map<String, dynamic>> resultMap = {for (var s in input) s['id']: Map<String, dynamic>.from(s)};
+
+  final futures =
+      input.map((sub) async {
+        final id = sub['id'];
+        try {
+          final downloadResult = await downloadYamlFile(sub['link'], ua, id, timeout);
+          return {'id': id, 'data': downloadResult};
+        } catch (e) {
+          showSnackBarGlobal("error", '${sub['label'] ?? id} 失败: $e');
+          return null;
+        }
+      }).toList();
+
+  final results = await Future.wait(futures);
+
+  for (var r in results) {
+    if (r == null) continue;
+
+    final id = r['id'];
+    final data = r['data'] as Map<String, dynamic>?;
+
+    if (data == null) continue;
+
+    final old = resultMap[id] ?? {};
+
+    resultMap[id] = {
+      ...old,
+
+      // 只允许这些字段被刷新覆盖
+      'expire': data['expire'] ?? old['expire'],
+      'update': data['update'] ?? old['update'],
+      'upload': data['upload'] ?? old['upload'],
+      'download': data['download'] ?? old['download'],
+      'total': data['total'] ?? old['total'],
+    };
+  }
+
+  final newList = resultMap.values.toList();
+  return newList;
 }
