@@ -1,6 +1,6 @@
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:flutter/material.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
@@ -42,7 +42,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> openWeb() async {
-    final settings = await readYamlAsMap(settingsPath);
+    final settings = await yamlRead(settingsPath);
     final port = settings['port'];
     String webuiUrl = 'http://127.0.0.1:$port/ui';
     final uri = Uri.parse(webuiUrl);
