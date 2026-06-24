@@ -275,7 +275,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                   setState(() => sub['favorite'] = value);
                                   subscriptions = await subscriptionsLoad(subscriptions);
 
-                                  final close = showSnackBarGlobal("load", "请稍候...");
                                   try {
                                     final data = await yamlRead(subscriptionsPath);
                                     final list =
@@ -289,10 +288,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       list[index]['favorite'] = value;
                                       await yamlWrite({'subscriptions': list}, subscriptionsPath);
                                     }
-                                    close();
-                                    showSnackBarGlobal("success", "修改成功");
                                   } catch (e) {
-                                    close();
                                     showSnackBarGlobal("error", '保存失败: $e');
                                   }
                                 },
