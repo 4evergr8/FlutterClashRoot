@@ -111,7 +111,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
             final isSelected = sub['select'] == true;
 
-
             return Card(
               color:
                   isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surface,
