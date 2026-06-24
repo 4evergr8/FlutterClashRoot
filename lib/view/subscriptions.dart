@@ -43,8 +43,18 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     super.initState();
     _init();
   }
+
   Future<void> _init() async {
-    subscriptions = await loadSubscriptions();
+    final close = showSnackBarGlobal("load", "请稍候...");
+    try {
+      subscriptions = await loadSubscriptions();
+      close();
+    } catch (e) {
+      close();
+      showSnackBarGlobal("error", '$e');
+      subscriptions = [];
+    }
+
     if (!mounted) return;
     setState(() {});
   }
@@ -149,8 +159,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       showSnackBarGlobal("error", '刷新订阅失败: $e');
     }
   }
-
-
 
   Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
     final confirm = await showDialog<bool>(
