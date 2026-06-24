@@ -70,8 +70,6 @@ url: "https://www.google.com"
 #节点测速链接
 testtimeout: 3000
 #节点测速超时,毫秒
-select: ""
-#当前选中订阅id
 ```
 
 ### subscriptions.yaml 订阅信息
@@ -98,6 +96,8 @@ subscriptions:
     #可用节点数量
     favorite: false
     #是否收藏订阅,收藏的订阅会被置顶
+    select: false
+    #是否选中订阅
 ```
 
 ### override.yaml 非递归配置覆写
