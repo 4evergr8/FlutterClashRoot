@@ -256,3 +256,34 @@ String formatSize(int bytes) {
   final valueTB = bytes / tb;
   return '${valueTB.toStringAsFixed(1)}T';
 }
+
+
+Future<List<Map<String, dynamic>>> loadSubscriptions([
+  List<Map<String, dynamic>>? input,
+]) async {
+  List<Map<String, dynamic>> list;
+
+  // 1. 有输入就直接用输入
+  if (input != null) {
+    list = input.map((e) => Map<String, dynamic>.from(e)).toList();
+  } else {
+    // 2. 没输入就从文件加载
+    final data = await readYamlAsMap(subscriptionsPath);
+    final raw = (data['subscriptions'] as List?) ?? [];
+    list = List<Map<String, dynamic>>.from(raw);
+  }
+
+  // 3. 排序（统一逻辑）
+  list.sort((a, b) {
+    final aFav = a['favorite'] == true ? 0 : 1;
+    final bFav = b['favorite'] == true ? 0 : 1;
+
+    if (aFav != bFav) return aFav - bFav;
+
+    final al = (a['label'] ?? '').toString();
+    final bl = (b['label'] ?? '').toString();
+    return al.compareTo(bl);
+  });
+
+  return list;
+}
