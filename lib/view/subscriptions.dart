@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,7 +51,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     try {
       subscriptions = await subscriptionsRefresh(subscriptions);
       subscriptions = await subscriptionsLoad(subscriptions);
-      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
       showSnackBarGlobal("success", "刷新完成");
     } catch (e) {
       showSnackBarGlobal("error", '$e');
@@ -63,7 +64,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     try {
       final list = await subscriptionsAdd(subscriptions, input);
       subscriptions = await subscriptionsLoad(list);
-      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
       close();
       showSnackBarGlobal("success", "全部添加完成");
     } catch (e) {
@@ -78,7 +79,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       subscriptions.removeWhere((s) => s['id'] == id);
       await Process.run('su', ['-c', 'rm -f $mainPath/config/$id.yaml']);
       subscriptions = await subscriptionsLoad(subscriptions);
-      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -119,7 +120,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               child: InkWell(
                 onTap: () async {
                   await _subscriptionsSwitch(sub['id']);
-                  await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+                  await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -276,7 +277,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                   final close = showSnackBarGlobal("load", "请稍候...");
                                   try {
-                                    final data = await readYamlAsMap(subscriptionsPath);
+                                    final data = await yamlRead(subscriptionsPath);
                                     final list =
                                         (data['subscriptions'] as List)
                                             .map((e) => Map<String, dynamic>.from(e))
@@ -286,7 +287,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                     if (index != -1) {
                                       list[index]['favorite'] = value;
-                                      await writeYamlFromMap({'subscriptions': list}, subscriptionsPath);
+                                      await yamlWrite({'subscriptions': list}, subscriptionsPath);
                                     }
                                     close();
                                     showSnackBarGlobal("success", "修改成功");
@@ -300,7 +301,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                               PopupMenuButton<int>(
                                 icon: Icon(Icons.more_vert, size: 20, color: Theme.of(context).colorScheme.onSurface),
                                 onSelected: (value) async {
-                                  final settings = await readYamlAsMap(settingsPath);
+                                  final settings = await yamlRead(settingsPath);
                                   final ua = settings['ua'];
                                   final timeout = settings['timeout'];
 
@@ -308,12 +309,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                     case 1:
                                       final close = showSnackBarGlobal("load", "请稍候...");
                                       try {
-                                        final downloadResult = await downloadYamlFile(
-                                          sub['link'],
-                                          ua,
-                                          sub['id'],
-                                          timeout,
-                                        );
+                                        final downloadResult = await yamlDownload(sub['link'], ua, sub['id'], timeout);
 
                                         final index = subscriptions.indexWhere((s) => s['id'] == sub['id']);
 
@@ -321,12 +317,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                           subscriptions[index] = {...subscriptions[index], ...downloadResult};
                                         }
 
-                                        await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+                                        await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
                                         close();
                                         showSnackBarGlobal("success", "刷新成功");
                                         setState(() {});
-
-
                                       } catch (e) {
                                         close();
                                         showSnackBarGlobal("error", '刷新失败: $e');
