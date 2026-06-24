@@ -58,6 +58,21 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     setState(() {});
   }
 
+  Future<void> _subscriptionsAdd(String input) async {
+    final close = showSnackBarGlobal("load", "请稍候...");
+    try {
+      final list = await subscriptionsAdd(subscriptions, input);
+      subscriptions = await subscriptionsLoad(list);
+      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
+      close();
+      showSnackBarGlobal("success", "全部添加完成");
+    } catch (e) {
+      close();
+      showSnackBarGlobal("error", '$e');
+    }
+    setState(() {});
+  }
+
   Future<void> _deleteSubscription(BuildContext context, Map<String, dynamic> sub) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -74,7 +89,6 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
     if (confirm != true) return;
 
-    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       subscriptions.removeWhere((s) => s['id'] == sub['id']);
       final data = {'subscriptions': subscriptions};
@@ -88,124 +102,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       }
       subscriptions = await subscriptionsLoad(subscriptions);
       await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
-      close();
-      showSnackBarGlobal("success", "已删除");
     } catch (e) {
-      close();
-      showSnackBarGlobal("error", '$e');
-    }
-  }
-
-  Future<void> _addSubscription() async {
-    final controller = TextEditingController();
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('添加订阅'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: TextField(
-              controller: controller,
-              minLines: 5,
-              maxLines: 10,
-              decoration: const InputDecoration(hintText: '每行一个订阅地址', border: OutlineInputBorder()),
-            ),
-          ),
-          actions: [
-            ElevatedButton.icon(
-              onPressed: () async {
-                final data = await Clipboard.getData('text/plain');
-                final text = data?.text;
-                if (text != null) controller.text = text;
-              },
-              icon: const Icon(Icons.paste),
-              label: const Text('粘贴'),
-            ),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context, controller.text),
-              icon: const Icon(Icons.check),
-              label: const Text('确认'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == null || result.trim().isEmpty) return;
-    if (!mounted) return;
-
-    final close = showSnackBarGlobal("load", "请稍候...");
-
-    try {
-      final settings = await readYamlAsMap(settingsPath);
-      final ua = settings['ua'];
-      final timeout = settings['timeout'];
-
-      final data = await readYamlAsMap(subscriptionsPath);
-      final list =
-          (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
-
-      final existingIds = list.map((e) => e['id']).toSet();
-
-      final inputLinks = result.split('\n').map((e) => canonicalUrl(e)).where((e) => e.isNotEmpty).toList();
-
-      // 输入内部去重（保留顺序）
-      final seen = <String>{};
-      final links = <String>[];
-      for (var l in inputLinks) {
-        if (!seen.contains(l)) {
-          seen.add(l);
-          links.add(l);
-        }
-      }
-
-      // 分离重复 & 新增
-      final newLinks = <String>[];
-
-      for (var link in links) {
-        final id = sha256Prefix(link);
-
-        if (existingIds.contains(id)) {
-          close();
-          showSnackBarGlobal("error", '订阅已存在: $link');
-        } else {
-          newLinks.add(link);
-        }
-      }
-
-      // 并行下载
-      final futures =
-          newLinks.map((link) async {
-            final id = sha256Prefix(link);
-            try {
-              final r = await downloadYamlFile(canonicalUrl(link), ua, id, timeout);
-              return r;
-            } catch (e) {
-              close();
-              showSnackBarGlobal("error", '$link 添加失败: $e');
-              return null;
-            }
-          }).toList();
-
-      final results = await Future.wait(futures);
-
-      // 只加入成功的
-      for (var r in results) {
-        if (r != null) {
-          list.add(r);
-        }
-      }
-      subscriptions = await subscriptionsLoad(list);
-
-      await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
-      close();
-      showSnackBarGlobal("success", "添加完成");
-    } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
   }
@@ -503,9 +400,53 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'add',
-        onPressed: _addSubscription,
+        onPressed: () async {
+          final links = await _dialogAddSubscription(context);
+
+          if (links != null && links.trim().isNotEmpty) {
+            await _subscriptionsAdd(links);
+          }
+        },
         child: const Icon(Icons.add),
       ),
     );
   }
+}
+
+Future<String?> _dialogAddSubscription(BuildContext context) {
+  final controller = TextEditingController();
+
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('添加订阅'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: TextField(
+            controller: controller,
+            minLines: 5,
+            maxLines: 10,
+            decoration: const InputDecoration(hintText: '每行一个订阅地址', border: OutlineInputBorder()),
+          ),
+        ),
+        actions: [
+          ElevatedButton.icon(
+            onPressed: () async {
+              final data = await Clipboard.getData('text/plain');
+              final text = data?.text;
+              if (text != null) controller.text = text;
+            },
+            icon: const Icon(Icons.paste),
+            label: const Text('粘贴'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, controller.text),
+            icon: const Icon(Icons.check),
+            label: const Text('确认'),
+          ),
+        ],
+      );
+    },
+  );
 }
