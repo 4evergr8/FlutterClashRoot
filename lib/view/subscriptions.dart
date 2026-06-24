@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/widget.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -48,7 +47,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     final close = showSnackBarGlobal("load", "请稍候...");
     List<Map<String, dynamic>> result = [];
     try {
-      result = await loadSubscriptions();
+      result = await subscriptionsLoad();
       close();
     } catch (e) {
       close();
@@ -57,35 +56,19 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     if (!mounted) return;
     setState(() {
       subscriptions = result;
-      isLoading=false;
+      isLoading = false;
     });
   }
 
-  Future<void> _onSubscriptionTap(String id) async {
+  Future<void> _subscriptionsSwitch(String id) async {
+    setState(() {
+      for (final s in subscriptions) {
+        s['select'] = s['id'] == id;
+      }
+    });
     final close = showSnackBarGlobal("load", "请稍候...");
     try {
-      final settings = await readYamlAsMap(settingsPath);
-
-      final port = settings['port'];
-      final base = await readYamlAsMap("$mainPath/config/$id.yaml");
-      final override = await readYamlAsMap(overridePath);
-      final yaml = overrideMap(base, override);
-      await writeYamlFromMap(yaml, configPath);
-      final dio = Dio();
-      final params = {'force': 'true'};
-      final data = {"path": configPath};
-      await dio.put(
-        'http://127.0.0.1:$port/configs',
-        queryParameters: params,
-        data: data,
-        options: Options(headers: {'Content-Type': 'application/json'}),
-      );
-      await dio.delete(
-        'http://127.0.0.1:$port/connections',
-        options: Options(headers: {'Content-Type': 'application/json'}),
-      );
-      settings["select"] = id;
-      await writeYamlFromMap(settings, settingsPath);
+      subscriptionsSwitch(id);
       close();
       showSnackBarGlobal("success", "切换成功");
     } catch (e) {
@@ -354,14 +337,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         onTap: () async {
-                          setState(() {
-                            for (final s in subscriptions) {
-                              s['select'] = s['id'] == sub['id'];
-                            }
-                          });
-
-                          applySubscriptions(subscriptions);
-                          await _onSubscriptionTap(sub['id']);
+                          await _subscriptionsSwitch(sub['id']);
+                          await writeYamlFromMap({'subscriptions': subscriptions},subscriptionsPath );
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(16),
