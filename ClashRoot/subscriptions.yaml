@@ -19,3 +19,5 @@ subscriptions:
     #可用节点数量
     favorite: false
     #是否收藏订阅,收藏的订阅会被置顶
+    select: false
+    #是否选中订阅
