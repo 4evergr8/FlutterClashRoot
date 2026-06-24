@@ -1,5 +1,5 @@
 import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/service/yaml.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_device_apps/flutter_device_apps.dart';
@@ -38,7 +38,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
-      final override = await readYamlAsMap(overridePath);
+      final override = await yamlRead(overridePath);
 
       // 判断名单方向和列表
       if (override['tun'] != null) {
@@ -114,7 +114,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final checkedPackages =
         apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
-    final override = await readYamlAsMap(overridePath);
+    final override = await yamlRead(overridePath);
 
     override['tun'] ??= {};
 
@@ -126,7 +126,7 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
       override['tun'].remove('include-package');
     }
 
-    await writeYamlFromMap(override, overridePath);
+    await yamlWrite(override, overridePath);
   }
 
   @override
