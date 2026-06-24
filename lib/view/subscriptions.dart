@@ -82,6 +82,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
+    setState(() {});
   }
 
   @override
@@ -321,10 +322,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                         }
 
                                         await writeYamlFromMap({'subscriptions': subscriptions}, subscriptionsPath);
-
-                                        setState(() {});
                                         close();
                                         showSnackBarGlobal("success", "刷新成功");
+                                        setState(() {});
+
+
                                       } catch (e) {
                                         close();
                                         showSnackBarGlobal("error", '刷新失败: $e');
