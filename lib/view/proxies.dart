@@ -73,7 +73,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
       final settings = await yamlRead(settingsPath);
-      final id = settings["select"];
 
       final port = settings['port'];
       final url = settings['url'];
@@ -127,7 +126,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
                 ? List<Map<String, dynamic>>.from(subsData['subscriptions'])
                 : <Map<String, dynamic>>[];
 
-        final selectedSub = subs.firstWhere((sub) => sub['id'] == id);
+        final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
 
         selectedSub['count'] = totalCount;
         selectedSub['alive'] = successCount;
