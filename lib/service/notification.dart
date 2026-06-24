@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
+import 'package:clashroot/widget.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:web_socket_client/web_socket_client.dart';
 
@@ -14,7 +15,6 @@ class TrafficState {
   int down = 0;
   int upTotal = 0;
   int downTotal = 0;
-  bool connected = false;
 }
 
 class WsManager {
@@ -26,23 +26,14 @@ class WsManager {
   void connect() {
     _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'), backoff: const ConstantBackoff(Duration(seconds: 1)));
 
-    _ws!.messages.listen(
-      (event) {
-        final data = jsonDecode(event);
+    _ws!.messages.listen((event) {
+      final data = jsonDecode(event);
 
-        state.up = data['up'] ?? 0;
-        state.down = data['down'] ?? 0;
-        state.upTotal = data['upTotal'] ?? 0;
-        state.downTotal = data['downTotal'] ?? 0;
-        state.connected = true;
-      },
-      onError: (_) {
-        state.connected = false;
-      },
-      onDone: () {
-        state.connected = false;
-      },
-    );
+      state.up = data['up'] ?? 0;
+      state.down = data['down'] ?? 0;
+      state.upTotal = data['upTotal'] ?? 0;
+      state.downTotal = data['downTotal'] ?? 0;
+    });
   }
 
   void close() {
@@ -55,8 +46,6 @@ class MyTaskHandler extends TaskHandler {
   final TrafficState state = TrafficState();
   late final WsManager ws;
 
-  bool _isInitialized = false;
-
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
@@ -66,45 +55,29 @@ class MyTaskHandler extends TaskHandler {
 
       ws = WsManager(state);
       ws.connect();
-
-      // 4. 标记初始化完成
-      _isInitialized = true;
     } catch (e) {
-      // 错误处理：如果文件读取失败，可以在这里捕获
-      _isInitialized = false;
+      showSnackBarGlobal("error", "$e");
+      rethrow;
     }
   }
 
   @override
   void onRepeatEvent(DateTime timestamp) {
-    // 如果后台还未读取完配置文件，显示正在初始化
-    if (!_isInitialized) {
-      FlutterForegroundTask.updateService(notificationTitle: 'Clash网速监控', notificationText: '正在读取核心配置...');
-      return;
-    }
+    final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
 
-    if (state.connected) {
-      final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
-      final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
+    final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
 
-      FlutterForegroundTask.updateService(notificationTitle: speedText, notificationText: totalText);
-    } else {
-      FlutterForegroundTask.updateService(notificationTitle: 'Clash网速监控', notificationText: '正在连接核心...');
-    }
+    FlutterForegroundTask.updateService(notificationTitle: speedText, notificationText: totalText);
   }
 
   @override
   Future<void> onNotificationButtonPressed(String id) async {
     await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);
-    ;
   }
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    // 只有初始化成功了，才需要关闭 ws
-    if (_isInitialized) {
-      ws.close();
-    }
+    ws.close();
   }
 }
 
@@ -114,7 +87,6 @@ void startCallback() {
 }
 
 void startMonitorService() async {
-  // 1. 初始化配置
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
       channelId: 'clash_channel',
@@ -126,12 +98,11 @@ void startMonitorService() async {
     foregroundTaskOptions: ForegroundTaskOptions(
       autoRunOnBoot: false,
       allowWakeLock: true,
-      eventAction: ForegroundTaskEventAction.repeat(1000), // 固定 1000ms 周期
+      eventAction: ForegroundTaskEventAction.repeat(1000),
     ),
     iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
   );
 
-  // 2. 直接启动服务即可，不需要 withReceivePort，也不需要 sendDataToTask
   await FlutterForegroundTask.startService(
     notificationButtons: [const NotificationButton(id: 'close', text: '关闭监控')],
     serviceTypes: [ForegroundServiceTypes.dataSync],
