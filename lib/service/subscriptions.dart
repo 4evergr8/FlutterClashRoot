@@ -355,3 +355,52 @@ Future<List<Map<String, dynamic>>> subscriptionsRefresh(List<Map<String, dynamic
   final newList = resultMap.values.toList();
   return newList;
 }
+
+Future<List<Map<String, dynamic>>> subscriptionsAdd(List<Map<String, dynamic>> subscriptions, String input) async {
+  final settings = await readYamlAsMap(settingsPath);
+  final ua = settings['ua'];
+  final timeout = settings['timeout'];
+  final list = subscriptions;
+
+  final existingIds = list.map((e) => e['id']).toSet();
+
+  final inputLinks = input.split('\n').map((e) => canonicalUrl(e)).where((e) => e.isNotEmpty).toList();
+
+  final seen = <String>{};
+  final links = <String>[];
+  for (var l in inputLinks) {
+    if (!seen.contains(l)) {
+      seen.add(l);
+      links.add(l);
+    }
+  }
+
+  final newLinks = <String>[];
+
+  for (var link in links) {
+    final id = sha256Prefix(link);
+    if (existingIds.contains(id)) {
+    } else {
+      newLinks.add(link);
+    }
+  }
+
+  final futures =
+      newLinks.map((link) async {
+        try {
+          return await downloadYamlFile(canonicalUrl(link), ua, sha256Prefix(link), timeout);
+        } catch (e) {
+          showSnackBarGlobal("error", '$link 添加失败: $e');
+          return null;
+        }
+      }).toList();
+
+  final results = await Future.wait(futures);
+
+  for (var r in results) {
+    if (r != null) {
+      list.add(r);
+    }
+  }
+  return list;
+}
