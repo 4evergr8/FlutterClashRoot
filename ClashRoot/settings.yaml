@@ -8,9 +8,6 @@ url: "https://www.google.com"
 #节点测速链接
 testtimeout: 3000
 #节点测速超时,毫秒
-select: ""
-#当前选中订阅id
-
 
 
 
