@@ -42,8 +42,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> openWeb() async {
-    final settings = await yamlRead(settingsPath);
-    final port = settings['port'];
+    final data = await yamlRead(dataPath);
+    final port = data['port'];
     String webuiUrl = 'http://127.0.0.1:$port/ui';
     final uri = Uri.parse(webuiUrl);
     await launchUrl(uri, mode: LaunchMode.externalApplication);
