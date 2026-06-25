@@ -44,9 +44,15 @@
   <tr>
     <td width="25%"><img src="./assets/1.jpg" width="100%"></td>
     <td width="25%"><img src="./assets/2.jpg" width="100%"></td>
-    <td width="25%"><img src="./assets/3.jpg" width="100%"></td>
+    
+   
+  </tr>
+</table>
+<table>
+  <tr>
+<td width="25%"><img src="./assets/3.jpg" width="100%"></td>
     <td width="25%"><img src="./assets/4.jpg" width="100%"></td>
-    <td width="25%"><img src="./assets/5.png" width="100%"></td>
+    <td width="25%"><img src="./assets/5.jpg" width="100%"></td>
   </tr>
 </table>
 ## 食用方法
