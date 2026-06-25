@@ -1,7 +1,9 @@
 # ClashRoot
 
 <p align="center">
-  <img src="./assets/aaa.png" alt="Logo" width="100" height="100">
+  <img src="./android/app/src/main/res/drawable/alarm_off.png" alt="Logo" width="50" height="50">
+<img src="./assets/aaa.png" alt="Logo" width="100" height="100">
+<img src="./android/app/src/main/res/drawable/alarm_on.png" alt="Logo" width="50" height="50">
 </p>
 
 <h3 align="center">ClashRoot</h3>
@@ -21,7 +23,6 @@
 - [食用方法](#食用方法)
 - [配置文件](#配置文件)
 - [引用](#引用)
-
 
 ## 主要功能
 
@@ -45,6 +46,7 @@
     <td width="25%"><img src="./assets/2.jpg" width="100%"></td>
     <td width="25%"><img src="./assets/3.jpg" width="100%"></td>
     <td width="25%"><img src="./assets/4.jpg" width="100%"></td>
+    <td width="25%"><img src="./assets/5.png" width="100%"></td>
   </tr>
 </table>
 ## 食用方法
@@ -153,7 +155,6 @@ dns!:
     - https://dns.alidns.com/dns-query#h3=true
     - https://doh.pub/dns-query
 ```
-
 
 ## 引用
 
