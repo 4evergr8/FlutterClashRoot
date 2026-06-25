@@ -72,7 +72,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
       final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
-      final settings = await yamlRead(settingsPath);
+      final settings = await yamlRead(dataPath);
 
       final port = settings['port'];
       final url = settings['url'];
@@ -86,10 +86,10 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
       final body = await res.transform(utf8.decoder).join();
 
-      final Map<String, dynamic> data = json.decode(body);
+      final Map<String, dynamic> jsonData = json.decode(body);
 
-      if (data.containsKey('message')) {
-        message = data['message'] as String?;
+      if (jsonData.containsKey('message')) {
+        message = jsonData['message'] as String?;
 
         successCount = 0;
       } else {
@@ -98,7 +98,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         final List<DelayItem> list = [];
 
         for (final name in proxies) {
-          final delay = data[name];
+          final delay = jsonData[name];
 
           if (delay == null) {
             list.add(DelayItem(name, 0));
@@ -119,11 +119,11 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
         delayList = list;
 
-        final subsData = await yamlRead(subscriptionsPath);
+        final data = await yamlRead(dataPath);
 
         final subs =
-            (subsData['subscriptions'] is List)
-                ? List<Map<String, dynamic>>.from(subsData['subscriptions'])
+            (data['subscriptions'] is List)
+                ? List<Map<String, dynamic>>.from(data['subscriptions'])
                 : <Map<String, dynamic>>[];
 
         final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
@@ -131,7 +131,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         selectedSub['count'] = totalCount;
         selectedSub['alive'] = successCount;
 
-        await yamlWrite({'subscriptions': subs}, subscriptionsPath);
+        await yamlWrite(data, dataPath);
       }
 
       if (mounted) {
