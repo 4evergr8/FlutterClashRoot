@@ -48,12 +48,25 @@ Future<void> yamlWrite(Map<String, dynamic> data, String targetPath) async {
   if (result.exitCode != 0) throw Exception(result.stderr);
 }
 
-/// 顶层覆盖 Map：patch 的值覆盖 base 的同名 key
 Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic> override) {
-  final result = Map<String, dynamic>.from(base); // 拷贝一份 base
+  final result = Map<String, dynamic>.from(base);
+
   override.forEach((key, value) {
-    result[key] = value; // 顶层覆盖
+    if (key.endsWith('!')) {
+      final realKey = key.substring(0, key.length - 1);
+      result[realKey] = value;
+      return;
+    }
+
+    final baseValue = result[key];
+
+    if (value is Map<String, dynamic> && baseValue is Map<String, dynamic>) {
+      result[key] = overrideMap(baseValue, value);
+    } else {
+      result[key] = value;
+    }
   });
+
   return result;
 }
 
