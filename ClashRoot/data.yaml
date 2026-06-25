@@ -11,7 +11,7 @@ testtimeout: 3000
 subscriptions:
   - id: "example"
     #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
-    link: ""
+    link: "https://raw.githubusercontent.com/4evergr8/FlutterClashRoot/refs/heads/main/ClashRoot/config.yaml"
     #订阅下载链接
     label: "测试订阅"
     #订阅显示名称
