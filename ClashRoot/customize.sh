@@ -25,7 +25,7 @@ if [ -d "$OLD_PATH/config" ]; then
     cp -rf "$OLD_PATH/config" "$MODPATH/"
 fi
 
-for FILE in override.yaml settings.yaml subscriptions.yaml config.yaml; do
+for FILE in override.yaml data.yaml config.yaml; do
     if [ -f "$OLD_PATH/$FILE" ]; then
         ui_print "恢复 $FILE"
         cp -f "$OLD_PATH/$FILE" "$MODPATH/"
