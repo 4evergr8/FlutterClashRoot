@@ -50,7 +50,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
-      final settings = await yamlRead(settingsPath);
+      final settings = await yamlRead(dataPath);
 
       port = settings['port'];
 
