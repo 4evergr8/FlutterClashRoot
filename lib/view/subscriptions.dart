@@ -306,14 +306,21 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       try {
                                         final downloadResult = await yamlDownload(sub['link'], ua, sub['id'], timeout);
 
-                                        final index = data['subscriptions'].indexWhere((s) => s['id'] == sub['id']);
+                                        final list =
+                                            (data['subscriptions'] as List)
+                                                .map((e) => Map<String, dynamic>.from(e))
+                                                .toList();
+
+                                        final index = list.indexWhere((s) => s['id'] == sub['id']);
 
                                         if (index != -1) {
-                                          data['subscriptions'][index] = {
-                                            ...data['subscriptions'][index],
-                                            ...downloadResult,
+                                          list[index] = {
+                                            ...Map<String, dynamic>.from(list[index]),
+                                            ...Map<String, dynamic>.from(downloadResult),
                                           };
                                         }
+
+                                        data['subscriptions'] = list;
 
                                         await yamlWrite(data, dataPath);
                                         close();
