@@ -41,7 +41,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
           s['select'] = s['id'] == id;
         }
       });
-      subscriptionsSwitch(id);
+      await subscriptionsSwitch(id);
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -52,6 +52,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       data = await subscriptionsRefresh(data);
       data = await subscriptionsLoad(data);
       await yamlWrite(data, dataPath);
+      final subs =
+      (data['subscriptions'] is List)
+          ? List<Map<String, dynamic>>.from(data['subscriptions'])
+          : <Map<String, dynamic>>[];
+      final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
+      await subscriptionsSwitch(selectedSub['id']);
+
       showSnackBarGlobal("success", "刷新完成");
     } catch (e) {
       showSnackBarGlobal("error", '$e');
@@ -92,7 +99,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     return Scaffold(
       appBar: AppBar(title: const Text('订阅')),
       body: RefreshIndicator(
-        onRefresh: _subscriptionsRefresh,
+        onRefresh:  _subscriptionsRefresh,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: data['subscriptions'].length + 1, // 👈 多一个
@@ -321,8 +328,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                         }
 
                                         data['subscriptions'] = list;
-
                                         await yamlWrite(data, dataPath);
+                                        if (sub['select'] == true) {
+                                          await subscriptionsSwitch(sub['id']);
+                                        }
                                         close();
                                         showSnackBarGlobal("success", "刷新成功");
                                         setState(() {});
