@@ -96,36 +96,28 @@ String formatSize(int bytes) {
   return '${valueTB.toStringAsFixed(1)}T';
 }
 
-Future<List<Map<String, dynamic>>> subscriptionsLoad([List<Map<String, dynamic>>? input]) async {
-  List<Map<String, dynamic>> list;
+Future<Map<String, dynamic>> subscriptionsLoad([Map<String, dynamic>? input]) async {
+  final Map<String, dynamic> result = input ?? await yamlRead(dataPath);
 
-  // 1. 有输入就直接用输入
-  if (input != null) {
-    list = input.map((e) => Map<String, dynamic>.from(e)).toList();
-  } else {
-    // 2. 没输入就从文件加载
-    final data = await yamlRead(subscriptionsPath);
-    final raw = (data['subscriptions'] as List?) ?? [];
-    list = List<Map<String, dynamic>>.from(raw);
-  }
+  final raw = (result['subscriptions'] as List?) ?? [];
 
-  // 3. 排序（统一逻辑）
+  final list = raw.map((e) => Map<String, dynamic>.from(e)).toList();
+
   list.sort((a, b) {
     final aFav = a['favorite'] == true ? 0 : 1;
     final bFav = b['favorite'] == true ? 0 : 1;
 
     if (aFav != bFav) return aFav - bFav;
 
-    final al = (a['label'] ?? '').toString();
-    final bl = (b['label'] ?? '').toString();
-    return al.compareTo(bl);
+    return (a['label'] ?? '').toString().compareTo((b['label'] ?? '').toString());
   });
 
-  return list;
+  result['subscriptions'] = list;
+  return result;
 }
 
 Future<void> subscriptionsSwitch(String id) async {
-  final settings = await yamlRead(settingsPath);
+  final settings = await yamlRead(dataPath);
   final port = settings['port'];
   final base = await yamlRead("$mainPath/config/$id.yaml");
   final override = await yamlRead(overridePath);
@@ -146,11 +138,12 @@ Future<void> subscriptionsSwitch(String id) async {
   );
 }
 
-Future<List<Map<String, dynamic>>> subscriptionsRefresh(List<Map<String, dynamic>> input) async {
-  final settings = await yamlRead(settingsPath);
+Future<Map<String, dynamic>> subscriptionsRefresh(Map<String, dynamic> data) async {
+  final ua = data['ua'];
+  final timeout = data['timeout'];
 
-  final ua = settings['ua'];
-  final timeout = settings['timeout'];
+  final List<Map<String, dynamic>> input =
+      (data['subscriptions'] as List).map((e) => Map<String, dynamic>.from(e)).toList();
 
   final Map<String, Map<String, dynamic>> resultMap = {for (var s in input) s['id']: Map<String, dynamic>.from(s)};
 
@@ -172,36 +165,30 @@ Future<List<Map<String, dynamic>>> subscriptionsRefresh(List<Map<String, dynamic
     if (r == null) continue;
 
     final id = r['id'];
-    final data = r['data'] as Map<String, dynamic>?;
+    final downloadResult = r['data'] as Map<String, dynamic>?;
 
-    if (data == null) continue;
+    if (downloadResult == null) continue;
 
     final old = resultMap[id] ?? {};
 
     resultMap[id] = {
       ...old,
-
-      // 只允许这些字段被刷新覆盖
-      'expire': data['expire'] ?? old['expire'],
-      'update': data['update'] ?? old['update'],
-      'upload': data['upload'] ?? old['upload'],
-      'download': data['download'] ?? old['download'],
-      'total': data['total'] ?? old['total'],
+      'expire': downloadResult['expire'] ?? old['expire'],
+      'update': downloadResult['update'] ?? old['update'],
+      'upload': downloadResult['upload'] ?? old['upload'],
+      'download': downloadResult['download'] ?? old['download'],
+      'total': downloadResult['total'] ?? old['total'],
     };
   }
 
-  final newList = resultMap.values.toList();
-  return newList;
+  return {...data, 'subscriptions': resultMap.values.toList()};
 }
 
-Future<List<Map<String, dynamic>>> subscriptionsAdd(List<Map<String, dynamic>> subscriptions, String input) async {
-  final settings = await yamlRead(settingsPath);
-  final ua = settings['ua'];
-  final timeout = settings['timeout'];
-  final list = subscriptions;
-
+Future<Map<String, dynamic>> subscriptionsAdd(Map<String, dynamic> data, String input) async {
+  final ua = data['ua'];
+  final timeout = data['timeout'];
+  final list = data['subscriptions'];
   final existingIds = list.map((e) => e['id']).toSet();
-
   final inputLinks = input.split('\n').map((e) => canonicalUrl(e)).where((e) => e.isNotEmpty).toList();
 
   final seen = <String>{};
@@ -240,5 +227,5 @@ Future<List<Map<String, dynamic>>> subscriptionsAdd(List<Map<String, dynamic>> s
       list.add(r);
     }
   }
-  return list;
+  return data;
 }
