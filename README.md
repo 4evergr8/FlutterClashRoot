@@ -57,7 +57,7 @@
 
 ## 配置文件
 
-### settings.yaml 软件设置
+### data.yaml 软件数据
 
 ```yaml
 ua: "clash.meta"
@@ -70,15 +70,10 @@ url: "https://www.google.com"
 #节点测速链接
 testtimeout: 3000
 #节点测速超时,毫秒
-```
-
-### subscriptions.yaml 订阅信息
-
-```yaml
 subscriptions:
   - id: "example"
     #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
-    link: ""
+    link: "https://raw.githubusercontent.com/4evergr8/FlutterClashRoot/refs/heads/main/ClashRoot/config.yaml"
     #订阅下载链接
     label: "测试订阅"
     #订阅显示名称
@@ -94,13 +89,13 @@ subscriptions:
     #上次更新时间
     count: 0
     #可用节点数量
-    favorite: false
+    favorite: true
     #是否收藏订阅,收藏的订阅会被置顶
-    select: false
+    select: true
     #是否选中订阅
 ```
 
-### override.yaml 非递归配置覆写
+### override.yaml 配置覆写,默认递归覆写,在键名末尾添加"!"将改为简单替换
 
 ```yaml
 mode: rule
@@ -127,7 +122,7 @@ profile:
   store-selected: false
   store-fake-ip: true
 
-tun:
+tun!:
   enable: true
   stack: "gvisor"
   device: "tun0"
@@ -137,7 +132,7 @@ tun:
 
 
 
-dns:
+dns!:
   enable: true
   cache-algorithm: lru
   prefer-h3: false
@@ -157,13 +152,12 @@ dns:
   nameserver:
     - https://dns.alidns.com/dns-query#h3=true
     - https://doh.pub/dns-query
-
 ```
 
 
 ## 引用
 
 - 本项目采用GitHub Action进行编译
-- 软件界面参考[chen08209/FlClash](https://github.com/chen08209/FlClash)
+- 部分软件界面参考[chen08209/FlClash](https://github.com/chen08209/FlClash)
 - WebUI来自[MetaCubeX/metacubexd](https://github.com/MetaCubeX/metacubexd)
 - 规则集合来自[Loyalsoldier/v2ray-rules-dat](https://github.com/Loyalsoldier/v2ray-rules-dat)
