@@ -42,6 +42,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         }
       });
       await subscriptionsSwitch(id);
+      await yamlWrite(data, dataPath);
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
