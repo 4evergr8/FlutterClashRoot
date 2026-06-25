@@ -17,7 +17,7 @@ class SubscriptionView extends StatefulWidget {
 class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => false;
-  List<Map<String, dynamic>> subscriptions = [];
+  Map<String, dynamic> data = {};
 
   @override
   void initState() {
@@ -27,7 +27,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
   Future<void> _init() async {
     try {
-      subscriptions = await subscriptionsLoad();
+      data = await subscriptionsLoad();
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -37,7 +37,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   Future<void> _subscriptionsSwitch(String id) async {
     try {
       setState(() {
-        for (final s in subscriptions) {
+        for (final s in data['subscriptions']) {
           s['select'] = s['id'] == id;
         }
       });
@@ -49,9 +49,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
   Future<void> _subscriptionsRefresh() async {
     try {
-      subscriptions = await subscriptionsRefresh(subscriptions);
-      subscriptions = await subscriptionsLoad(subscriptions);
-      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
+      data = await subscriptionsRefresh(data);
+      data = await subscriptionsLoad(data);
+      await yamlWrite(data, dataPath);
       showSnackBarGlobal("success", "刷新完成");
     } catch (e) {
       showSnackBarGlobal("error", '$e');
@@ -62,9 +62,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   Future<void> _subscriptionsAdd(String input) async {
     final close = showSnackBarGlobal("load", "请稍候...");
     try {
-      final list = await subscriptionsAdd(subscriptions, input);
-      subscriptions = await subscriptionsLoad(list);
-      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
+      data = await subscriptionsAdd(data, input);
+      data = await subscriptionsLoad(data);
+      await yamlWrite(data, dataPath);
       close();
       showSnackBarGlobal("success", "全部添加完成");
     } catch (e) {
@@ -76,10 +76,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
   Future<void> _subscriptionDelete(String id) async {
     try {
-      subscriptions.removeWhere((s) => s['id'] == id);
+      data['subscriptions'].removeWhere((s) => s['id'] == id);
       await Process.run('su', ['-c', 'rm -f $mainPath/config/$id.yaml']);
-      subscriptions = await subscriptionsLoad(subscriptions);
-      await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
+      data = await subscriptionsLoad(data);
+      await yamlWrite(data, dataPath);
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -95,12 +95,12 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
         onRefresh: _subscriptionsRefresh,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: subscriptions.length + 1, // 👈 多一个
+          itemCount: data['subscriptions'].length + 1, // 👈 多一个
           itemBuilder: (context, index) {
-            if (index == subscriptions.length) {
+            if (index == data['subscriptions'].length) {
               return const SizedBox(height: 100); // 👈 底部空白
             }
-            final sub = subscriptions[index];
+            final sub = data['subscriptions'][index];
             final totalValue = sub['total'] as int;
 
             int scale(int value) {
@@ -120,7 +120,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
               child: InkWell(
                 onTap: () async {
                   await _subscriptionsSwitch(sub['id']);
-                  await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
+                  await yamlWrite(data['subscriptions'], dataPath);
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -273,10 +273,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                   final value = !(sub['favorite'] ?? false);
 
                                   setState(() => sub['favorite'] = value);
-                                  subscriptions = await subscriptionsLoad(subscriptions);
+                                  data = await subscriptionsLoad(data);
 
                                   try {
-                                    final data = await yamlRead(subscriptionsPath);
+                                    final data = await yamlRead(dataPath);
                                     final list =
                                         (data['subscriptions'] as List)
                                             .map((e) => Map<String, dynamic>.from(e))
@@ -286,7 +286,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
                                     if (index != -1) {
                                       list[index]['favorite'] = value;
-                                      await yamlWrite({'subscriptions': list}, subscriptionsPath);
+                                      await yamlWrite(data, dataPath);
                                     }
                                   } catch (e) {
                                     showSnackBarGlobal("error", '保存失败: $e');
@@ -297,9 +297,8 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                               PopupMenuButton<int>(
                                 icon: Icon(Icons.more_vert, size: 20, color: Theme.of(context).colorScheme.onSurface),
                                 onSelected: (value) async {
-                                  final settings = await yamlRead(settingsPath);
-                                  final ua = settings['ua'];
-                                  final timeout = settings['timeout'];
+                                  final ua = data['ua'];
+                                  final timeout = data['timeout'];
 
                                   switch (value) {
                                     case 1:
@@ -307,13 +306,16 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       try {
                                         final downloadResult = await yamlDownload(sub['link'], ua, sub['id'], timeout);
 
-                                        final index = subscriptions.indexWhere((s) => s['id'] == sub['id']);
+                                        final index = data['subscriptions'].indexWhere((s) => s['id'] == sub['id']);
 
                                         if (index != -1) {
-                                          subscriptions[index] = {...subscriptions[index], ...downloadResult};
+                                          data['subscriptions'][index] = {
+                                            ...data['subscriptions'][index],
+                                            ...downloadResult,
+                                          };
                                         }
 
-                                        await yamlWrite({'subscriptions': subscriptions}, subscriptionsPath);
+                                        await yamlWrite(data, dataPath);
                                         close();
                                         showSnackBarGlobal("success", "刷新成功");
                                         setState(() {});
