@@ -25,9 +25,9 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   void initState() {
     super.initState();
     // 2. 在 initState 中初始化并赋予初始值
-    _startController = TextEditingController(text: '--');
-    _stopController = TextEditingController(text: '--');
-    _displayController = TextEditingController(text: '--');
+    _startController = TextEditingController(text: '');
+    _stopController = TextEditingController(text: '');
+    _displayController = TextEditingController(text: '');
     _runCheck();
   }
 
@@ -60,44 +60,34 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runTest() async {
-
     try {
       final result = await clashTest();
       setState(() {
         _displayController.text = result;
       });
-
     } catch (e) {
-
       showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _startClash() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
     try {
-      final close=showSnackBarGlobal("load", "正在启动");
       final result = await clashStart();
       setState(() {
         _startController.text = result;
       });
-      close();
     } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _killClash() async {
-    final close=showSnackBarGlobal("load", "正在停止");
     try {
       final result = await clashKill();
       setState(() {
         _stopController.text = result;
       });
-      close();
     } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
   }
