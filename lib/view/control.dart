@@ -60,37 +60,44 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runTest() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
+
     try {
       final result = await clashTest();
       setState(() {
         _displayController.text = result;
       });
-      close();
+
     } catch (e) {
-      close();
+
       showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _startClash() async {
+    final close = showSnackBarGlobal("load", "请稍候...");
     try {
+      final close=showSnackBarGlobal("load", "正在启动");
       final result = await clashStart();
       setState(() {
         _startController.text = result;
       });
+      close();
     } catch (e) {
+      close();
       showSnackBarGlobal("error", '$e');
     }
   }
 
   Future<void> _killClash() async {
+    final close=showSnackBarGlobal("load", "正在停止");
     try {
       final result = await clashKill();
       setState(() {
         _stopController.text = result;
       });
+      close();
     } catch (e) {
+      close();
       showSnackBarGlobal("error", '$e');
     }
   }
