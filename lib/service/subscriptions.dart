@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
@@ -143,7 +144,7 @@ Future<void> subscriptionsSwitch(String id) async {
   final override = await yamlRead(overridePath);
   final yaml = overrideMap(base, override);
   await yamlWrite(yaml, configPath);
-  await startClash();
+  await Process.start("su", ["-c", "sh", scriptPath, "start"]);
 
 
 }
