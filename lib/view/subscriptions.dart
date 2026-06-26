@@ -54,9 +54,9 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       data = await subscriptionsLoad(data);
       await yamlWrite(data, dataPath);
       final subs =
-      (data['subscriptions'] is List)
-          ? List<Map<String, dynamic>>.from(data['subscriptions'])
-          : <Map<String, dynamic>>[];
+          (data['subscriptions'] is List)
+              ? List<Map<String, dynamic>>.from(data['subscriptions'])
+              : <Map<String, dynamic>>[];
       final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
       await subscriptionsSwitch(selectedSub['id']);
 
@@ -100,7 +100,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     return Scaffold(
       appBar: AppBar(title: const Text('订阅')),
       body: RefreshIndicator(
-        onRefresh:  _subscriptionsRefresh,
+        onRefresh: _subscriptionsRefresh,
         child: ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: data['subscriptions'].length + 1, // 👈 多一个
@@ -279,23 +279,13 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                 ),
                                 onPressed: () async {
                                   final value = !(sub['favorite'] ?? false);
-
                                   setState(() => sub['favorite'] = value);
                                   data = await subscriptionsLoad(data);
-
                                   try {
-                                    final data = await yamlRead(dataPath);
-                                    final list =
-                                        (data['subscriptions'] as List)
-                                            .map((e) => Map<String, dynamic>.from(e))
-                                            .toList();
-
+                                    final list = data['subscriptions'];
                                     final index = list.indexWhere((s) => s['id'] == sub['id']);
-
-                                    if (index != -1) {
-                                      list[index]['favorite'] = value;
-                                      await yamlWrite(data, dataPath);
-                                    }
+                                    list[index]['favorite'] = value;
+                                    await yamlWrite(data, dataPath);
                                   } catch (e) {
                                     showSnackBarGlobal("error", '保存失败: $e');
                                   }
