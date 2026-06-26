@@ -32,4 +32,7 @@ for FILE in override.yaml data.yaml config.yaml; do
     fi
 done
 
+CLASH_PATH="$MODPATH/clash"
+chmod +x "$CLASH_PATH"
+
 ui_print "安装完成"
