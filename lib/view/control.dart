@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:flutter/material.dart';
-import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ControlView extends StatefulWidget {
@@ -53,10 +50,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _runCheck() async {
     try {
-      final result = await checkClash();
-      if (!mounted) return;
+      final result = await clashCheck();
       setState(() {
-        // 4. 更新文本时，直接修改 text 属性
         _displayController.text = result;
       });
     } catch (e) {
@@ -67,13 +62,11 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _runTest() async {
     final close = showSnackBarGlobal("load", "请稍候...");
     try {
-      final result = await testClash();
-      if (!mounted) return;
+      final result = await clashTest();
       setState(() {
         _displayController.text = result;
       });
       close();
-      showSnackBarGlobal("success", "测试完成");
     } catch (e) {
       close();
       showSnackBarGlobal("error", '$e');
@@ -82,36 +75,21 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _startClash() async {
     try {
-      final result = await Process.start("su", ["-c", "sh", scriptPath, "start"]);;
-
-      await QuickSettings.syncTile(
-        Tile(
-          label: "ClashRoot",
-          tileStatus: TileStatus.active,
-          drawableName: 'alarm_on',
-          contentDescription: "Clash核心已启动",
-        ),
-      );
+      final result = await clashStart();
+      setState(() {
+        _startController.text = result;
+      });
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
   }
 
-  Future<void> _stopClash() async {
+  Future<void> _killClash() async {
     try {
-      final result = await stopClash();
-      if (!mounted) return;
+      final result = await clashKill();
       setState(() {
         _stopController.text = result;
       });
-      await QuickSettings.syncTile(
-        Tile(
-          label: "ClashRoot",
-          tileStatus: TileStatus.inactive,
-          drawableName: 'alarm_off',
-          contentDescription: "Clash核心已停止",
-        ),
-      );
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -161,7 +139,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: _stopClash,
+                  onPressed: _killClash,
                   icon: const Icon(Icons.stop),
                   label: const Text('停止'),
                   style: ElevatedButton.styleFrom(
