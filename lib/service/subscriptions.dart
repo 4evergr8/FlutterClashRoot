@@ -144,7 +144,7 @@ Future<void> subscriptionsSwitch(String id) async {
   final override = await yamlRead(overridePath);
   final yaml = overrideMap(base, override);
   await yamlWrite(yaml, configPath);
-  await Process.start("su", ["-c", "sh", scriptPath, "start"]);
+  await clashStart();
 
 
 }
