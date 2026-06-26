@@ -8,31 +8,58 @@ import 'package:yaml/yaml.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 
 dynamic _convertYaml(dynamic node) {
+  // 1. YamlMap → 强制 Map<String, dynamic>
   if (node is YamlMap) {
-    return Map<String, dynamic>.fromEntries(
-      node.entries.map((e) => MapEntry(e.key.toString(), _convertYaml(e.value))),
-    );
-  } else if (node is YamlList) {
-    return node.map(_convertYaml).toList();
+    final map = <String, dynamic>{};
+    node.forEach((key, value) {
+      map[key.toString()] = _convertYaml(value);
+    });
+    return map;
   }
+
+  // 2. YamlList → List<dynamic>
+  if (node is YamlList) {
+    return node.map((e) => _convertYaml(e)).toList();
+  }
+
+  // 3. 普通 Map（关键修复点：防止 _Map<dynamic, dynamic> 漏网）
+  if (node is Map) {
+    final map = <String, dynamic>{};
+    node.forEach((key, value) {
+      map[key.toString()] = _convertYaml(value);
+    });
+    return map;
+  }
+
+  // 4. 普通 List（防止 yaml_codec 返回的 List<dynamic>）
+  if (node is List) {
+    return node.map((e) => _convertYaml(e)).toList();
+  }
+
   return node;
 }
 
-/// 读取 YAML 文件为 Map，顶层必须是 Map，否则报错
+/// 读取 YAML 文件为 Map<String, dynamic>
 Future<Map<String, dynamic>> yamlRead(String sourcePath) async {
   final dir = await getApplicationDocumentsDirectory();
   final localPath = join(dir.path, basename(sourcePath));
 
   final result = await Process.run('su', ['-c', 'cp $sourcePath $localPath && chmod 777 $localPath']);
-  if (result.exitCode != 0) throw Exception(result.stderr);
+
+  if (result.exitCode != 0) {
+    throw Exception(result.stderr);
+  }
 
   final text = await File(localPath).readAsString();
+
   final obj = YamlCodec().decode(text);
 
   final converted = _convertYaml(obj);
+
   if (converted is! Map<String, dynamic>) {
     throw Exception('YAML 顶层不是 Map，无法处理: $sourcePath');
   }
+
   return converted;
 }
 
