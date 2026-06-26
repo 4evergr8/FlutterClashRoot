@@ -81,18 +81,9 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _startClash() async {
     try {
       final result = await startClash();
-      if (!mounted) return;
       setState(() {
         _startController.text = result;
       });
-      await QuickSettings.syncTile(
-        Tile(
-          label: "ClashRoot",
-          tileStatus: TileStatus.active,
-          drawableName: 'alarm_on',
-          contentDescription: "Clash核心已启动",
-        ),
-      );
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -101,7 +92,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   Future<void> _stopClash() async {
     try {
       final result = await stopClash();
-      if (!mounted) return;
       setState(() {
         _stopController.text = result;
       });
