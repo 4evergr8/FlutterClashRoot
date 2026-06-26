@@ -797,22 +797,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.1"
-  web_socket_support:
-    dependency: "direct main"
-    description:
-      name: web_socket_support
-      sha256: "664afff71cc661177a7c4cef7f5aedaba46302fdb5d87378cb6c2ec638f213ad"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.5"
-  web_socket_support_platform_interface:
-    dependency: transitive
-    description:
-      name: web_socket_support_platform_interface
-      sha256: "7ff2d5e608444c4e24d25fa772d695c9fe9c55d221bded74aae891bfe699991f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.1"
   xdg_directories:
     dependency: transitive
     description:
