@@ -45,16 +45,14 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     try {
       final config = await yamlRead(configPath);
 
-      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
+      final proxies = config['proxies'].map((e) => e['name'] as String).toList();
 
       delayList = proxies.map((e) => DelayItem(e, -1)).toList();
 
       totalCount = delayList.length;
       successCount = 0;
 
-      if (mounted) {
-        setState(() {});
-      }
+      setState(() {});
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -63,14 +61,12 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   Future<void> _testDelay() async {
     final close = showSnackBarGlobal("load", "请稍候...");
 
-    if (mounted) {
-      setState(() => isTesting = true);
-    }
+    setState(() => isTesting = true);
 
     try {
       final config = await yamlRead(configPath);
 
-      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
+      final proxies = config['proxies'].map((e) => e['name'] as String).toList();
 
       final settings = await yamlRead(dataPath);
 
@@ -94,7 +90,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       }
 
       final uri = Uri.parse('http://127.0.0.1:$port/group/GLOBAL/delay?url=$url&timeout=$timeout&expected=$expected');
-
 
       final req = await HttpClient().getUrl(uri);
       final res = await req.close();
@@ -135,14 +130,8 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         delayList = list;
 
         final data = await yamlRead(dataPath);
-
-        final subs =
-            (data['subscriptions'] is List)
-                ? List<Map<String, dynamic>>.from(data['subscriptions'])
-                : <Map<String, dynamic>>[];
-
+        final subs = data['subscriptions'];
         final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
-
         selectedSub['count'] = totalCount;
         selectedSub['alive'] = successCount;
 
