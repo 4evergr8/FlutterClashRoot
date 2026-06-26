@@ -100,6 +100,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
@@ -112,6 +113,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.error,
                       foregroundColor: Theme.of(context).colorScheme.onError,
+                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
@@ -129,6 +131,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
@@ -141,6 +144,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
