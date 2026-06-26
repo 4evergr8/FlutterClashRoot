@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
@@ -13,7 +12,7 @@ Tile onTileClicked(Tile tile) {
   final isActive = tile.tileStatus == TileStatus.active;
 
   if (isActive) {
-    stopClash();
+    Process.run("su", ["-c", "sh", scriptPath, "kill"]);
 
     tile
       ..tileStatus = TileStatus.inactive
