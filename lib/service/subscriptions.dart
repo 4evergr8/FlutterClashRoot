@@ -5,7 +5,6 @@ import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
 
 String sha256Prefix(String input) {
   // 1. 转成字节
