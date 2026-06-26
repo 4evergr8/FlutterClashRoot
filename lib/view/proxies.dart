@@ -78,8 +78,9 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final url = settings['url'];
 
       timeout = settings['testtimeout'];
+      final expected =settings['expected-status'];
 
-      final uri = Uri.parse('http://127.0.0.1:$port/group/GLOBAL/delay?url=$url&timeout=$timeout');
+      final uri = Uri.parse('http://127.0.0.1:$port/group/GLOBAL/delay?url=$url&timeout=$timeout&expected=$expected');
 
       final req = await HttpClient().getUrl(uri);
       final res = await req.close();
