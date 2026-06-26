@@ -7,41 +7,40 @@ import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:web_socket_support/web_socket_support.dart';
 
 int port = 9090;
 
 class MyTaskHandler extends TaskHandler {
   int _up = 0, _down = 0, _upTotal = 0, _downTotal = 0;
-  late final WebSocketClient _wsClient;
+  bool _active = false;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
       final settings = await yamlRead(dataPath);
       port = settings['port'];
-
-      _wsClient = WebSocketClient(
-        DefaultWebSocketListener.forTextMessages(
-          (_) {}, // onOpened
-          (_, __) {}, // onClosed
-          (message) {
-            // onTextMessage
-            final data = jsonDecode(message);
-            _up = data['up'] ?? 0;
-            _down = data['down'] ?? 0;
-            _upTotal = data['upTotal'] ?? 0;
-            _downTotal = data['downTotal'] ?? 0;
-          },
-          (_, __) {}, // onBinaryMessage
-          (_) {}, // onError
-        ),
-      );
-
-      await _wsClient.connect('ws://127.0.0.1:$port/traffic', options: WebSocketOptions(autoReconnect: true));
+      _active = true;
+      _loop(); // 不 await，让它在后台跑
     } catch (e) {
       showSnackBarGlobal("error", "$e");
       rethrow;
+    }
+  }
+
+  Future<void> _loop() async {
+    while (_active) {
+      try {
+        final ws = await WebSocket.connect('ws://127.0.0.1:$port/traffic');
+        await for (final event in ws) {
+          if (!_active) break;
+          final data = jsonDecode(event) as Map;
+          _up      = data['up']      ?? 0;
+          _down    = data['down']    ?? 0;
+          _upTotal = data['upTotal'] ?? 0;
+          _downTotal = data['downTotal'] ?? 0;
+        }
+      } catch (_) {}
+      if (_active) await Future.delayed(const Duration(seconds: 1));
     }
   }
 
@@ -67,7 +66,7 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    await _wsClient.disconnect();
+    _active = false;
   }
 }
 
@@ -90,7 +89,10 @@ void startMonitorService() async {
       allowWakeLock: true,
       eventAction: ForegroundTaskEventAction.repeat(1000),
     ),
-    iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
+    iosNotificationOptions: const IOSNotificationOptions(
+      showNotification: false,
+      playSound: false,
+    ),
   );
 
   await FlutterForegroundTask.startService(
@@ -106,11 +108,15 @@ void startMonitorService() async {
 }
 
 String formatSpeed(int bytesPerSecond) {
-  final value = bytesPerSecond / 1024;
-  return value < 1024 ? '${value.toStringAsFixed(1)} KB/s' : '${(value / 1024).toStringAsFixed(1)} MB/s';
+  final kb = bytesPerSecond / 1024;
+  return kb < 1024
+      ? '${kb.toStringAsFixed(1)} KB/s'
+      : '${(kb / 1024).toStringAsFixed(1)} MB/s';
 }
 
 String formatTotal(int totalBytes) {
   final mb = totalBytes / (1024 * 1024);
-  return mb < 1024 ? '${mb.toStringAsFixed(1)} MB' : '${(mb / 1024).toStringAsFixed(2)} GB';
+  return mb < 1024
+      ? '${mb.toStringAsFixed(1)} MB'
+      : '${(mb / 1024).toStringAsFixed(2)} GB';
 }
