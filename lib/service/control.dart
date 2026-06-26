@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:clashroot/service/path.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
-Future<String> clashKill() async {
+Future<void> clashKill() async {
   await QuickSettings.syncTile(
     Tile(
       label: "ClashRoot",
@@ -13,17 +13,10 @@ Future<String> clashKill() async {
       contentDescription: "Clash核心已停止",
     ),
   );
-  final process = await Process.start("su", ["-c", "sh", scriptPath, "kill"]);
-  final results = await Future.wait([
-    process.stdout.transform(utf8.decoder).join(),
-    process.stderr.transform(utf8.decoder).join(),
-  ]);
-  final total = "${results[0]}\n${results[1]}";
-  await process.exitCode;
-  return total;
+   Process.start("su", ["-c", "sh", scriptPath, "kill"]);
 }
 
-Future<String> clashStart() async {
+Future<void> clashStart() async {
   await QuickSettings.syncTile(
     Tile(
       label: "ClashRoot",
@@ -32,14 +25,8 @@ Future<String> clashStart() async {
       contentDescription: "Clash核心已启动",
     ),
   );
-  final process = await Process.start("su", ["-c", "sh", scriptPath, "start"]);
-  final results = await Future.wait([
-    process.stdout.transform(utf8.decoder).join(),
-    process.stderr.transform(utf8.decoder).join(),
-  ]);
-  final total = "${results[0]}\n${results[1]}";
-  await process.exitCode;
-  return total;
+   Process.start("su", ["-c", "sh", scriptPath, "start"]);
+
 }
 
 Future<String> clashTest() async {
