@@ -7,7 +7,7 @@ import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:web_socket_client/web_socket_client.dart';
+import 'package:web_socket_support/web_socket_support.dart';
 
 int port = 9090;
 
@@ -19,43 +19,47 @@ class TrafficState {
 }
 
 class WsManager {
-  WebSocket? _ws;
+  late final WebSocketClient _wsClient;
   final TrafficState state;
 
-  WsManager(this.state);
+  WsManager(this.state) {
+    _wsClient = WebSocketClient(
+      DefaultWebSocketListener.forTextMessages(
+            (wsc) => print('WS connected'),          // _onWsOpen
+            (code, msg) => print('WS closed: $msg'), // _onWsClosed
+            (msg) {
+          final data = jsonDecode(msg);
+          state.up = data['up'] ?? 0;
+          state.down = data['down'] ?? 0;
+          state.upTotal = data['upTotal'] ?? 0;
+          state.downTotal = data['downTotal'] ?? 0;
+        },
+      ),
+    );
+  }
 
-  void connect() {
-    _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'), backoff: const ConstantBackoff(Duration(seconds: 1)));
-
-    _ws!.messages.listen((event) {
-      final data = jsonDecode(event);
-
-      state.up = data['up'] ?? 0;
-      state.down = data['down'] ?? 0;
-      state.upTotal = data['upTotal'] ?? 0;
-      state.downTotal = data['downTotal'] ?? 0;
-    });
+  Future<void> connect() async {
+    await _wsClient.connect(
+      'ws://127.0.0.1:$port/traffic',
+      options: WebSocketOptions(autoReconnect: true),
+    );
   }
 
   void close() {
-    _ws?.close();
-    _ws = null;
+    _wsClient.disconnect();
   }
 }
 
 class MyTaskHandler extends TaskHandler {
   final TrafficState state = TrafficState();
-  late final WsManager ws;
+  late final WsManager ws = WsManager(state);
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
       final settings = await yamlRead(dataPath);
-
       port = settings['port'];
-
-      ws = WsManager(state);
-      ws.connect();
+      await ws.connect();
     } catch (e) {
       showSnackBarGlobal("error", "$e");
       rethrow;
@@ -65,9 +69,7 @@ class MyTaskHandler extends TaskHandler {
   @override
   void onRepeatEvent(DateTime timestamp) {
     final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
-
     final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
-
     FlutterForegroundTask.updateService(notificationTitle: speedText, notificationText: totalText);
   }
 
@@ -90,6 +92,7 @@ class MyTaskHandler extends TaskHandler {
   }
 }
 
+// 以下部分无需改动
 @pragma('vm:entry-point')
 void startCallback() {
   FlutterForegroundTask.setTaskHandler(MyTaskHandler());
