@@ -28,10 +28,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   Future<void> _init() async {
     try {
       data = await subscriptionsLoad();
+      setState(() {});
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
-    setState(() {});
   }
 
   Future<void> _subscriptionsSwitch(String id) async {
@@ -58,10 +58,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       await subscriptionsSwitch(selectedSub['id']);
 
       showSnackBarGlobal("success", "刷新完成");
+      setState(() {});
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
-    setState(() {});
   }
 
   Future<void> _subscriptionsAdd(String input) async {
@@ -72,11 +72,11 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       await yamlWrite(data, dataPath);
       close();
       showSnackBarGlobal("success", "全部添加完成");
+      setState(() {});
     } catch (e) {
       close();
       showSnackBarGlobal("error", '$e');
     }
-    setState(() {});
   }
 
   Future<void> _subscriptionDelete(String id) async {
@@ -85,10 +85,10 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       await Process.run('su', ['-c', 'rm -f $mainPath/config/$id.yaml']);
       data = await subscriptionsLoad(data);
       await yamlWrite(data, dataPath);
+      setState(() {});
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
-    setState(() {});
   }
 
   @override
