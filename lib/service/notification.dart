@@ -7,49 +7,68 @@ import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:web_socket_client/web_socket_client.dart';
 
 int port = 9090;
 
+class TrafficState {
+  int up = 0;
+  int down = 0;
+  int upTotal = 0;
+  int downTotal = 0;
+}
+
+class WsManager {
+  WebSocket? _ws;
+  final TrafficState state;
+
+  WsManager(this.state);
+
+  void connect() {
+    _ws = WebSocket(Uri.parse('ws://127.0.0.1:$port/traffic'), backoff: const ConstantBackoff(Duration(seconds: 1)));
+
+    _ws!.messages.listen((event) {
+      final data = jsonDecode(event);
+
+      state.up = data['up'] ?? 0;
+      state.down = data['down'] ?? 0;
+      state.upTotal = data['upTotal'] ?? 0;
+      state.downTotal = data['downTotal'] ?? 0;
+    });
+  }
+
+  void close() {
+    _ws?.close();
+    _ws = null;
+  }
+}
+
 class MyTaskHandler extends TaskHandler {
-  int _up = 0, _down = 0, _upTotal = 0, _downTotal = 0;
-  bool _active = false;
+  final TrafficState state = TrafficState();
+  late final WsManager ws;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
     try {
       final settings = await yamlRead(dataPath);
+
       port = settings['port'];
-      _active = true;
-      _loop(); // 不 await，让它在后台跑
+
+      ws = WsManager(state);
+      ws.connect();
     } catch (e) {
       showSnackBarGlobal("error", "$e");
       rethrow;
     }
   }
 
-  Future<void> _loop() async {
-    while (_active) {
-      try {
-        final ws = await WebSocket.connect('ws://127.0.0.1:$port/traffic');
-        await for (final event in ws) {
-          if (!_active) break;
-          final data = jsonDecode(event) as Map;
-          _up      = data['up']      ?? 0;
-          _down    = data['down']    ?? 0;
-          _upTotal = data['upTotal'] ?? 0;
-          _downTotal = data['downTotal'] ?? 0;
-        }
-      } catch (_) {}
-      if (_active) await Future.delayed(const Duration(seconds: 1));
-    }
-  }
-
   @override
   void onRepeatEvent(DateTime timestamp) {
-    FlutterForegroundTask.updateService(
-      notificationTitle: '↑ ${formatSpeed(_up)}  ↓ ${formatSpeed(_down)}',
-      notificationText: '上传: ${formatTotal(_upTotal)}  下载: ${formatTotal(_downTotal)}',
-    );
+    final String speedText = '↑ ${formatSpeed(state.up)}  ↓ ${formatSpeed(state.down)}';
+
+    final String totalText = '上传: ${formatTotal(state.upTotal)}  下载: ${formatTotal(state.downTotal)}';
+
+    FlutterForegroundTask.updateService(notificationTitle: speedText, notificationText: totalText);
   }
 
   @override
@@ -57,7 +76,8 @@ class MyTaskHandler extends TaskHandler {
     if (id == 'close') {
       await Process.run('su', ['-c', 'am force-stop app.flutter.clashroot']);
     } else {
-      await Dio().delete(
+      final dio = Dio();
+      await dio.delete(
         'http://127.0.0.1:$port/connections',
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
@@ -66,7 +86,7 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    _active = false;
+    ws.close();
   }
 }
 
@@ -89,10 +109,7 @@ void startMonitorService() async {
       allowWakeLock: true,
       eventAction: ForegroundTaskEventAction.repeat(1000),
     ),
-    iosNotificationOptions: const IOSNotificationOptions(
-      showNotification: false,
-      playSound: false,
-    ),
+    iosNotificationOptions: const IOSNotificationOptions(showNotification: false, playSound: false),
   );
 
   await FlutterForegroundTask.startService(
@@ -108,15 +125,18 @@ void startMonitorService() async {
 }
 
 String formatSpeed(int bytesPerSecond) {
-  final kb = bytesPerSecond / 1024;
-  return kb < 1024
-      ? '${kb.toStringAsFixed(1)} KB/s'
-      : '${(kb / 1024).toStringAsFixed(1)} MB/s';
+  double value = bytesPerSecond.toDouble();
+  if (value < 1024 * 1024) {
+    return '${(value / 1024).toStringAsFixed(1)} KB/s';
+  }
+  return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB/s';
 }
 
 String formatTotal(int totalBytes) {
-  final mb = totalBytes / (1024 * 1024);
-  return mb < 1024
-      ? '${mb.toStringAsFixed(1)} MB'
-      : '${(mb / 1024).toStringAsFixed(2)} GB';
+  double value = totalBytes.toDouble();
+  double mb = value / (1024 * 1024);
+  if (mb < 1024) {
+    return '${mb.toStringAsFixed(1)} MB';
+  }
+  return '${(mb / 1024).toStringAsFixed(2)} GB';
 }
