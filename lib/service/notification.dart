@@ -14,7 +14,6 @@ int port = 9090;
 class MyTaskHandler extends TaskHandler {
   int _up = 0, _down = 0, _upTotal = 0, _downTotal = 0;
   late final WebSocketClient _wsClient;
-  WebSocketConnection? _wsConn;
 
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
@@ -24,17 +23,18 @@ class MyTaskHandler extends TaskHandler {
 
       _wsClient = WebSocketClient(
         DefaultWebSocketListener.forTextMessages(
-          (conn) => _wsConn = conn,
-          (_, __) => _wsConn = null,
-          (msg) {
-            final data = jsonDecode(msg);
+          (_) {}, // onOpened
+          (_, __) {}, // onClosed
+          (message) {
+            // onTextMessage
+            final data = jsonDecode(message);
             _up = data['up'] ?? 0;
             _down = data['down'] ?? 0;
             _upTotal = data['upTotal'] ?? 0;
             _downTotal = data['downTotal'] ?? 0;
           },
-          (_, __) {},
-          (_) => _wsConn = null,
+          (_, __) {}, // onBinaryMessage
+          (_) {}, // onError
         ),
       );
 
@@ -106,11 +106,11 @@ void startMonitorService() async {
 }
 
 String formatSpeed(int bytesPerSecond) {
-  double v = bytesPerSecond.toDouble();
-  return v < 1024 * 1024 ? '${(v / 1024).toStringAsFixed(1)} KB/s' : '${(v / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+  final value = bytesPerSecond / 1024;
+  return value < 1024 ? '${value.toStringAsFixed(1)} KB/s' : '${(value / 1024).toStringAsFixed(1)} MB/s';
 }
 
 String formatTotal(int totalBytes) {
-  double mb = totalBytes / (1024 * 1024);
+  final mb = totalBytes / (1024 * 1024);
   return mb < 1024 ? '${mb.toStringAsFixed(1)} MB' : '${(mb / 1024).toStringAsFixed(2)} GB';
 }
