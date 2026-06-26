@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:clashroot/service/control.dart';
+import 'package:clashroot/service/path.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
 /// =======================
@@ -18,17 +21,13 @@ Tile onTileClicked(Tile tile) {
       ..drawableName = "alarm_off"
       ..contentDescription = "Clash核心已停止";
   } else {
-    startClash();
-    QuickSettings.syncTile(
-      Tile(
-        label: "ClashRoot",
-        tileStatus: TileStatus.active,
-        drawableName: 'alarm_on',
-        contentDescription: "Clash核心已启动",
-      ),
-    );
+    Process.start("su", ["-c", "sh", scriptPath, "start"]);
+    tile
+      ..tileStatus = TileStatus.active
+      ..label = "ClashRoot"
+      ..drawableName = "alarm_on"
+      ..contentDescription = "Clash核心已启动";
   }
-
   return tile;
 }
 
