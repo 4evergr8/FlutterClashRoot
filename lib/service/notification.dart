@@ -24,24 +24,21 @@ class MyTaskHandler extends TaskHandler {
 
       _wsClient = WebSocketClient(
         DefaultWebSocketListener.forTextMessages(
-              (conn) => _wsConn = conn,
-              (_, __) => _wsConn = null,
-              (msg) {
+          (conn) => _wsConn = conn,
+          (_, __) => _wsConn = null,
+          (msg) {
             final data = jsonDecode(msg);
             _up = data['up'] ?? 0;
             _down = data['down'] ?? 0;
             _upTotal = data['upTotal'] ?? 0;
             _downTotal = data['downTotal'] ?? 0;
           },
-              (_, __) {},
-              (_) => _wsConn = null,
+          (_, __) {},
+          (_) => _wsConn = null,
         ),
       );
 
-      await _wsClient.connect(
-        'ws://127.0.0.1:$port/traffic',
-        options: WebSocketOptions(autoReconnect: true),
-      );
+      await _wsClient.connect('ws://127.0.0.1:$port/traffic', options: WebSocketOptions(autoReconnect: true));
     } catch (e) {
       showSnackBarGlobal("error", "$e");
       rethrow;
@@ -110,14 +107,10 @@ void startMonitorService() async {
 
 String formatSpeed(int bytesPerSecond) {
   double v = bytesPerSecond.toDouble();
-  return v < 1024 * 1024
-      ? '${(v / 1024).toStringAsFixed(1)} KB/s'
-      : '${(v / (1024 * 1024)).toStringAsFixed(1)} MB/s';
+  return v < 1024 * 1024 ? '${(v / 1024).toStringAsFixed(1)} KB/s' : '${(v / (1024 * 1024)).toStringAsFixed(1)} MB/s';
 }
 
 String formatTotal(int totalBytes) {
   double mb = totalBytes / (1024 * 1024);
-  return mb < 1024
-      ? '${mb.toStringAsFixed(1)} MB'
-      : '${(mb / 1024).toStringAsFixed(2)} GB';
+  return mb < 1024 ? '${mb.toStringAsFixed(1)} MB' : '${(mb / 1024).toStringAsFixed(2)} GB';
 }
