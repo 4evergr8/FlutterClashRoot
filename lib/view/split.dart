@@ -1,4 +1,5 @@
 import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -127,6 +128,10 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     }
 
     await yamlWrite(override, overridePath);
+    final data= await subscriptionsLoad();
+    final subs = data['subscriptions'];
+    final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
+    await subscriptionsSwitch(selectedSub['id']);
   }
 
   @override
