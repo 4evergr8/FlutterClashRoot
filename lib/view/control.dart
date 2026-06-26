@@ -17,16 +17,11 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   bool get wantKeepAlive => false;
 
   // 1. 声明持久化的 Controller
-  late final TextEditingController _startController;
-  late final TextEditingController _stopController;
   late final TextEditingController _displayController;
 
   @override
   void initState() {
     super.initState();
-    // 2. 在 initState 中初始化并赋予初始值
-    _startController = TextEditingController(text: '');
-    _stopController = TextEditingController(text: '');
     _displayController = TextEditingController(text: '');
     _runCheck();
   }
@@ -34,8 +29,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   @override
   void dispose() {
     // 3. 必须在 dispose 中销毁所有控制器，防止内存泄漏
-    _startController.dispose();
-    _stopController.dispose();
     _displayController.dispose();
     super.dispose();
   }
@@ -72,10 +65,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _startClash() async {
     try {
-      final result = await clashStart();
-      setState(() {
-        _startController.text = result;
-      });
+      await clashStart();
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -83,10 +73,7 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _killClash() async {
     try {
-      final result = await clashKill();
-      setState(() {
-        _stopController.text = result;
-      });
+      await clashKill();
     } catch (e) {
       showSnackBarGlobal("error", '$e');
     }
@@ -116,25 +103,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _startController, // 5. 绑定持久化实例
-                    readOnly: true,
-                    maxLines: null,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.all(8),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 停止按钮 + 显示输出
-            Row(
-              children: [
                 ElevatedButton.icon(
                   onPressed: _killClash,
                   icon: const Icon(Icons.stop),
@@ -145,22 +113,11 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     minimumSize: const Size(120, 50),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _stopController, // 5. 绑定持久化实例
-                    readOnly: true,
-                    maxLines: null,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.all(8),
-                    ),
-                  ),
-                ),
+
               ],
             ),
-            const SizedBox(height: 12),
+
+
 
             // 测试和 WEBUI 按钮并排
             Row(
