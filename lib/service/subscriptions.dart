@@ -126,7 +126,7 @@ Future<void> subscriptionsSwitch(String id) async {
   final dio = Dio();
   final params = {'force': 'true'};
   final data = {"path": configPath};
-  await dio.put(
+  await dio.post(
     'http://127.0.0.1:$port/restart',
     // queryParameters: params,
     // data: data,
