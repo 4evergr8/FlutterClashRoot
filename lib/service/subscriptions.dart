@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
@@ -116,26 +117,36 @@ Future<Map<String, dynamic>> subscriptionsLoad([Map<String, dynamic>? input]) as
   return result;
 }
 
+// Future<void> subscriptionsSwitch(String id) async {
+//   final settings = await yamlRead(dataPath);
+//   final port = settings['port'];
+//   final base = await yamlRead("$mainPath/config/$id.yaml");
+//   final override = await yamlRead(overridePath);
+//   final yaml = overrideMap(base, override);
+//   await yamlWrite(yaml, configPath);
+//   final dio = Dio();
+//   final params = {'force': 'true'};
+//   final data = {"path": configPath};
+//   await dio.put(
+//     'http://127.0.0.1:$port/configs',
+//     queryParameters: params,
+//     data: data,
+//     options: Options(headers: {'Content-Type': 'application/json'}),
+//   );
+//   await dio.delete(
+//     'http://127.0.0.1:$port/connections',
+//     options: Options(headers: {'Content-Type': 'application/json'}),
+//   );
+// }
+
 Future<void> subscriptionsSwitch(String id) async {
-  final settings = await yamlRead(dataPath);
-  final port = settings['port'];
   final base = await yamlRead("$mainPath/config/$id.yaml");
   final override = await yamlRead(overridePath);
   final yaml = overrideMap(base, override);
   await yamlWrite(yaml, configPath);
-  final dio = Dio();
-  final params = {'force': 'true'};
-  final data = {"path": configPath};
-  await dio.post(
-    'http://127.0.0.1:$port/restart',
-    // queryParameters: params,
-    // data: data,
-    //options: Options(headers: {'Content-Type': 'application/json'}),
-  );
-  // await dio.delete(
-  //   'http://127.0.0.1:$port/connections',
-  //   options: Options(headers: {'Content-Type': 'application/json'}),
-  // );
+  await startClash();
+
+
 }
 
 Future<Map<String, dynamic>> subscriptionsRefresh(Map<String, dynamic> data) async {
