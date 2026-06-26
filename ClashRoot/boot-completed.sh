@@ -3,10 +3,9 @@
 CLASH_DIR="/data/adb/modules/ClashRoot"
 CLASH_BIN="./clash"
 
-# 命令字符串变量
-START_CMD="cd $CLASH_DIR && chmod +x $CLASH_BIN && nohup setsid $CLASH_BIN -d . >$CLASH_DIR/clash.log 2>&1 &"
+START_CMD="cd $CLASH_DIR && setsid $CLASH_BIN -d . >$CLASH_DIR/clash.log 2>&1 &"
 KILL_CMD="killall clash"
-TEST_CMD="cd $CLASH_DIR && chmod +x $CLASH_BIN && $CLASH_BIN -t -d ."
+TEST_CMD="cd $CLASH_DIR && $CLASH_BIN -t -d ."
 CHECK_CMD="ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status"
 
 CMD="$1"
