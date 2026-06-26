@@ -53,10 +53,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       data = await subscriptionsRefresh(data);
       data = await subscriptionsLoad(data);
       await yamlWrite(data, dataPath);
-      final subs =
-          (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
+      final subs = data['subscriptions'];
       final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
       await subscriptionsSwitch(selectedSub['id']);
 
@@ -304,10 +301,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                       try {
                                         final downloadResult = await yamlDownload(sub['link'], ua, sub['id'], timeout);
 
-                                        final list =
-                                            (data['subscriptions'] as List)
-                                                .map((e) => Map<String, dynamic>.from(e))
-                                                .toList();
+                                        final list = data['subscriptions'];
 
                                         final index = list.indexWhere((s) => s['id'] == sub['id']);
 
