@@ -78,6 +78,8 @@ url: "https://www.google.com"
 #节点测速链接
 testtimeout: 3000
 #节点测速超时,毫秒
+expected: 200
+#节点测速返回码,只有匹配的返回码才算alive
 subscriptions:
   - id: "example"
     #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
