@@ -92,34 +92,33 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
             // 重启按钮 + 显示输出
             Row(
               children: [
-                ElevatedButton.icon(
-                  onPressed: _startClash,
-                  icon: const Icon(Icons.restart_alt_outlined),
-                  label: const Text('重启'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    minimumSize: const Size(120, 50),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _startClash,
+                    icon: const Icon(Icons.restart_alt_outlined),
+                    label: const Text('重启'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _killClash,
-                  icon: const Icon(Icons.stop),
-                  label: const Text('停止'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                    minimumSize: const Size(120, 50),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _killClash,
+                    icon: const Icon(Icons.stop),
+                    label: const Text('停止'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      foregroundColor: Theme.of(context).colorScheme.onError,
+                    ),
                   ),
                 ),
-
               ],
             ),
+            const SizedBox(height: 12),
 
-
-
-            // 测试和 WEBUI 按钮并排
             Row(
               children: [
                 Expanded(
@@ -130,7 +129,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
@@ -143,7 +141,6 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      minimumSize: const Size(120, 50),
                     ),
                   ),
                 ),
