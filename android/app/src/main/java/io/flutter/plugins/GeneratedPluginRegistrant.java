@@ -55,10 +55,5 @@ public final class GeneratedPluginRegistrant {
     } catch (Exception e) {
       Log.e(TAG, "Error registering plugin url_launcher_android, io.flutter.plugins.urllauncher.UrlLauncherPlugin", e);
     }
-    try {
-      flutterEngine.getPlugins().add(new tech.sharpbitstudio.web_socket_support.WebSocketSupportPlugin());
-    } catch (Exception e) {
-      Log.e(TAG, "Error registering plugin web_socket_support, tech.sharpbitstudio.web_socket_support.WebSocketSupportPlugin", e);
-    }
   }
 }
