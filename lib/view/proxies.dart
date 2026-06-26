@@ -45,7 +45,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     try {
       final config = await yamlRead(configPath);
 
-      final proxies = config['proxies'].map((e) => e['name'] as String).toList();
+      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
       delayList = proxies.map((e) => DelayItem(e, -1)).toList();
 
@@ -66,7 +66,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     try {
       final config = await yamlRead(configPath);
 
-      final proxies = config['proxies'].map((e) => e['name'] as String).toList();
+      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
 
       final settings = await yamlRead(dataPath);
 
@@ -130,20 +130,24 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         delayList = list;
 
         final data = await yamlRead(dataPath);
-        final subs = data['subscriptions'];
+
+        final subs =
+            (data['subscriptions'] is List)
+                ? List<Map<String, dynamic>>.from(data['subscriptions'])
+                : <Map<String, dynamic>>[];
+
         final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
+
         selectedSub['count'] = totalCount;
         selectedSub['alive'] = successCount;
 
         await yamlWrite(data, dataPath);
       }
       close();
+      setState(() {});
     } catch (e) {
       close();
       showSnackBarGlobal("error", '$e');
-    }
-    if (mounted) {
-      setState(() {});
     }
   }
 
@@ -234,7 +238,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
                     ),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ],
         ),
