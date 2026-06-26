@@ -78,7 +78,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final url = settings['url'];
 
       timeout = settings['testtimeout'];
-      final expected = settings['expected-status'];
+      final expected = settings['expected'];
 
       for (int i = 1; i < 7; i++) {
         try {
@@ -94,6 +94,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       }
 
       final uri = Uri.parse('http://127.0.0.1:$port/group/GLOBAL/delay?url=$url&timeout=$timeout&expected=$expected');
+
 
       final req = await HttpClient().getUrl(uri);
       final res = await req.close();
@@ -147,18 +148,13 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
         await yamlWrite(data, dataPath);
       }
-
-      if (mounted) {
-        setState(() {});
-      }
       close();
     } catch (e) {
       close();
       showSnackBarGlobal("error", '$e');
-    } finally {
-      if (mounted) {
-        setState(() => isTesting = false);
-      }
+    }
+    if (mounted) {
+      setState(() {});
     }
   }
 
