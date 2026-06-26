@@ -6,6 +6,7 @@ import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
 import 'package:clashroot/widget.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:web_socket_support/web_socket_support.dart';
 
@@ -20,33 +21,56 @@ class TrafficState {
 
 class WsManager {
   late final WebSocketClient _wsClient;
+  WebSocketConnection? _wsConnection;
   final TrafficState state;
 
   WsManager(this.state) {
     _wsClient = WebSocketClient(
       DefaultWebSocketListener.forTextMessages(
-            (wsc) => print('WS connected'),          // _onWsOpen
-            (code, msg) => print('WS closed: $msg'), // _onWsClosed
-            (msg) {
-          final data = jsonDecode(msg);
-          state.up = data['up'] ?? 0;
-          state.down = data['down'] ?? 0;
-          state.upTotal = data['upTotal'] ?? 0;
-          state.downTotal = data['downTotal'] ?? 0;
-        },
+        _onWsOpened,    // 1: onOpen
+        _onWsClosed,    // 2: onClosed
+        _onMessage,     // 3: onTextMessage
+            (_, __) => {},  // 4: onBinaryMessage (不需要，传空)
+        _onError,       // 5: onError
       ),
     );
   }
 
-  Future<void> connect() async {
-    await _wsClient.connect(
-      'ws://127.0.0.1:$port/traffic',
-      options: WebSocketOptions(autoReconnect: true),
-    );
+  void _onWsOpened(WebSocketConnection wsc) {
+    _wsConnection = wsc;
   }
 
-  void close() {
-    _wsClient.disconnect();
+  void _onWsClosed(int code, String reason) {
+    _wsConnection = null;
+  }
+
+  void _onMessage(String msg) {
+    try {
+      final data = jsonDecode(msg);
+      state.up = data['up'] ?? 0;
+      state.down = data['down'] ?? 0;
+      state.upTotal = data['upTotal'] ?? 0;
+      state.downTotal = data['downTotal'] ?? 0;
+    } catch (_) {}
+  }
+
+  void _onError(Exception ex) {
+    _wsConnection = null;
+  }
+
+  Future<void> connect() async {
+    try {
+      await _wsClient.connect(
+        'ws://127.0.0.1:$port/traffic',
+        options: WebSocketOptions(autoReconnect: true),
+      );
+    } on PlatformException catch (e) {
+      showSnackBarGlobal("error", "WS连接失败: $e");
+    }
+  }
+
+  Future<void> close() async {
+    await _wsClient.disconnect();
   }
 }
 
@@ -88,11 +112,10 @@ class MyTaskHandler extends TaskHandler {
 
   @override
   Future<void> onDestroy(DateTime timestamp, bool isSuccess) async {
-    ws.close();
+    await ws.close();
   }
 }
 
-// 以下部分无需改动
 @pragma('vm:entry-point')
 void startCallback() {
   FlutterForegroundTask.setTaskHandler(MyTaskHandler());
