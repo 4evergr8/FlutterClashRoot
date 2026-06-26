@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
@@ -12,8 +13,14 @@ Future<String> clashKill() async {
       contentDescription: "Clash核心已停止",
     ),
   );
-  final result = await Process.run("su", ["-c", "sh", scriptPath, "kill"]);
-  return (result.stdout.toString() + result.stderr.toString()).trim();
+  final process = await Process.start("su", ["-c", "sh", scriptPath, "kill"]);
+  final results = await Future.wait([
+    process.stdout.transform(utf8.decoder).join(),
+    process.stderr.transform(utf8.decoder).join(),
+  ]);
+  final total = "${results[0]}\n${results[1]}";
+  await process.exitCode;
+  return total;
 }
 
 Future<String> clashStart() async {
@@ -25,8 +32,14 @@ Future<String> clashStart() async {
       contentDescription: "Clash核心已启动",
     ),
   );
-  final result = await Process.run("su", ["-c", "sh", scriptPath, "start"]);
-  return (result.stdout.toString() + result.stderr.toString()).trim();
+  final process = await Process.start("su", ["-c", "sh", scriptPath, "start"]);
+  final results = await Future.wait([
+    process.stdout.transform(utf8.decoder).join(),
+    process.stderr.transform(utf8.decoder).join(),
+  ]);
+  final total = "${results[0]}\n${results[1]}";
+  await process.exitCode;
+  return total;
 }
 
 Future<String> clashTest() async {
