@@ -19,12 +19,6 @@ Tile onTileClicked(Tile tile) {
       ..contentDescription = "Clash核心已停止";
   } else {
     startClash();
-
-    tile
-      ..tileStatus = TileStatus.active
-      ..label = "ClashRoot"
-      ..drawableName = "alarm_on"
-      ..contentDescription = "Clash核心已启动";
   }
 
   return tile;
