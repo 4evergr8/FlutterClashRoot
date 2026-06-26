@@ -12,7 +12,7 @@ Tile onTileClicked(Tile tile) {
   final isActive = tile.tileStatus == TileStatus.active;
 
   if (isActive) {
-    Process.run("su", ["-c", "sh", scriptPath, "kill"]);
+    Process.start("su", ["-c", "sh", scriptPath, "kill"]);
 
     tile
       ..tileStatus = TileStatus.inactive
