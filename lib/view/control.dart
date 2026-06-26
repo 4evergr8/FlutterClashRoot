@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clashroot/service/control.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/yaml.dart';
@@ -80,11 +82,8 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
 
   Future<void> _startClash() async {
     try {
-      final result = await startClash();
-      if (!mounted) return;
-      setState(() {
-        _startController.text = result;
-      });
+      final result = await Process.start("su", ["-c", "sh", scriptPath, "start"]);;
+
       await QuickSettings.syncTile(
         Tile(
           label: "ClashRoot",
