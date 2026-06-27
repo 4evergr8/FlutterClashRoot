@@ -28,14 +28,12 @@ else
 
     # 无限循环，每小时检查一次当前小时
     while true; do
+        sleep 3600
         HOUR=$(date +%H)
-
-        if [ "$HOUR" = "05" ]; then
+        if [ $((10#$HOUR % 8)) -eq 6 ]; then
             eval "$KILL_CMD"
-            sleep 2
             eval "$START_CMD"
         fi
 
-        sleep 3600
     done
 fi
