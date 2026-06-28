@@ -12,8 +12,9 @@ YQ="$CLASH_DIR/yq"
 WGET="busybox wget"
 
 BASE="$CLASH_DIR/data.yaml"
-PATCH="$CLASH_DIR/override.yaml"
+OVERRIDE="$CLASH_DIR/override.yaml"
 OUT_DIR="$CLASH_DIR/config"
+CONFIG="$CLASH_DIR/config.yaml"
 
 CMD="$1"
 
@@ -32,42 +33,15 @@ elif [ "$CMD" = "test" ]; then
 elif [ "$CMD" = "check" ]; then
     eval "$CHECK_CMD"
 
-elif [ "$CMD" = "loop" ]; then
+elif [ "$CMD" = "yaml" ]; then
 
-    (
-        set +e
+    BASE_YAML="$2"
 
-        ua=$($YQ eval -r '.ua' "$BASE")
-
-        id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
-        link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
-
-        echo "id=$id"
-        echo "link=$link"
-
-        mkdir -p "$OUT_DIR"
-
-        if [ -n "$id" ] && [ -n "$link" ]; then
-            echo "download test"
-
-            $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
-
-            file="$OUT_DIR/$id.yaml"
-
-            echo "del test"
-            for p in $($YQ eval -r '.del[]' "$PATCH"); do
-                echo "del: $p"
-                $YQ eval "del(.$p)" -i "$file"
-            done
-
-            echo "set test"
-            $YQ eval '.set as $s | . * $s' "$file" "$PATCH" -i
-        fi
-
-        set -e
-    ) || true
-
-    echo "循环逻辑测试完成"
+    $YQ eval-all '
+        select(fileIndex == 0) as $a
+        | select(fileIndex == 1) as $b
+        | $b * $a
+    ' "$OVERRIDE" "$BASE_YAML" > "$CONFIG"
 
 else
     eval "$KILL_CMD"
@@ -84,24 +58,19 @@ else
                 set +e
 
                 ua=$($YQ eval -r '.ua' "$BASE")
-
                 id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
                 link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
 
-                mkdir -p "$OUT_DIR"
 
-                if [ -n "$id" ] && [ -n "$link" ]; then
 
-                    $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
+                $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
 
-                    file="$OUT_DIR/$id.yaml"
+                $YQ eval-all '
+                    select(fileIndex == 1) as $a
+                    | select(fileIndex == 0) as $b
+                    | $a + $b
+                ' "$OVERRIDE" "$OUT_DIR/$id.yaml" > "$CONFIG"
 
-                    for p in $($YQ eval -r '.del[]' "$PATCH"); do
-                        $YQ eval "del(.$p)" -i "$file"
-                    done
-
-                    $YQ eval '.set as $s | . * $s' "$file" "$PATCH" -i
-                fi
 
                 set -e
             ) || true
