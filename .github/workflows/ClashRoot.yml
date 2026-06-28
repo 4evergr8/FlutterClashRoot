@@ -46,16 +46,35 @@ jobs:
           echo "Downloading Clash: $CLASH_URL"
           curl -L -o ClashRoot/clash.gz "$CLASH_URL"
           gunzip -f ClashRoot/clash.gz
-#
-#      - name: 下载 yq (arm64)
-#        run: |
-#          YQ_URL=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest \
-#            | grep -oP '"browser_download_url": "\K.*?yq_linux_arm64(?=")' \
-#            | head -n 1)
-#
-#          echo "Downloading yq: $YQ_URL"
-#          curl -L -o ClashRoot/clash_yq "$YQ_URL"
-#          chmod +x ClashRoot/clash_yq
+          chmod +x ClashRoot/clash
+
+      - name: 下载 yq (arm64)
+        run: |
+          YQ_URL=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest \
+            | grep -oP '"browser_download_url": "\K.*?yq_linux_arm64(?=")' \
+            | head -n 1)
+
+          echo "Downloading yq: $YQ_URL"
+          curl -L -o ClashRoot/tool/yq "$YQ_URL"
+          chmod +x ClashRoot/tool/yq
+      - name: 下载 curl (arm64)
+        run: |
+          CURL_URL=$(curl -s https://api.github.com/repos/stunnel/static-curl/releases/latest \
+            | grep -oP '"browser_download_url": "\K.*?curl-linux-aarch64-glibc-[0-9.]+\.tar\.xz(?=")' \
+            | head -n 1)
+
+          echo "Downloading curl: $CURL_URL"
+
+          curl -L -o ClashRoot/tool/curl.tar.xz "$CURL_URL"
+
+          mkdir -p ClashRoot/tool/curl_tmp
+          tar -xJf ClashRoot/tool/curl.tar.xz -C ClashRoot/tool/curl_tmp
+
+          find ClashRoot/tool/curl_tmp -type f -name "curl" -exec mv {} ClashRoot/tool/curl \;
+
+          chmod +x ClashRoot/tool/curl
+
+          rm -rf ClashRoot/tool/curl_tmp ClashRoot/tool/curl.tar.xz
 
       - name: 下载最新版本MetaCubeXD
         run: |
