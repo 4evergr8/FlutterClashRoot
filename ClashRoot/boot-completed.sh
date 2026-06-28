@@ -9,7 +9,7 @@ TEST_CMD="cd $CLASH_DIR && $CLASH_BIN -t -d ."
 CHECK_CMD="ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status"
 
 YQ="$CLASH_DIR/tool/yq"
-CURL="$CLASH_DIR/tool/curl"
+WGET="busybox wget"
 
 BASE="$CLASH_DIR/data.yaml"
 PATCH="$CLASH_DIR/override.yaml"
@@ -37,6 +37,8 @@ elif [ "$CMD" = "loop" ]; then
     (
         set +e
 
+        ua=$($YQ eval -r '.ua' "$BASE")
+
         id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
         link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
 
@@ -47,7 +49,8 @@ elif [ "$CMD" = "loop" ]; then
 
         if [ -n "$id" ] && [ -n "$link" ]; then
             echo "download test"
-            $CURL -L "$link" -o "$OUT_DIR/$id.yaml"
+
+            $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
 
             file="$OUT_DIR/$id.yaml"
 
@@ -80,13 +83,16 @@ else
             (
                 set +e
 
+                ua=$($YQ eval -r '.ua' "$BASE")
+
                 id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
                 link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
 
                 mkdir -p "$OUT_DIR"
 
                 if [ -n "$id" ] && [ -n "$link" ]; then
-                    $CURL -L "$link" -o "$OUT_DIR/$id.yaml"
+
+                    $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
 
                     file="$OUT_DIR/$id.yaml"
 
