@@ -140,10 +140,10 @@ Future<Map<String, dynamic>> subscriptionsLoad([Map<String, dynamic>? input]) as
 // }
 
 Future<void> subscriptionsSwitch(String id) async {
-  final base = await yamlRead("$mainPath/config/$id.yaml");
-  final override = await yamlRead(overridePath);
-  final yaml = overrideMap(base, override);
-  await yamlWrite(yaml, configPath);
+  final result = await Process.run("su", ["-c", "sh", scriptPath, "yaml", "$mainPath/config/$id.yaml"]);
+  if (result.exitCode != 0) {
+    throw Exception("执行失败: ${result.stderr}");
+  }
   await clashStart();
 
 
