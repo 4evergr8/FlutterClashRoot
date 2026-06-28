@@ -105,7 +105,7 @@ subscriptions:
     #是否选中订阅
 ```
 
-### override.yaml 配置覆写,默认递归覆写,在键名末尾添加"!"将改为简单替换
+### override.yaml 配置覆写,仅支持简单替换
 
 ```yaml
 mode: rule
@@ -132,7 +132,7 @@ profile:
   store-selected: false
   store-fake-ip: true
 
-tun!:
+tun:
   enable: true
   stack: "gvisor"
   device: "tun0"
@@ -142,7 +142,7 @@ tun!:
 
 
 
-dns!:
+dns:
   enable: true
   cache-algorithm: lru
   prefer-h3: false
