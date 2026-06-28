@@ -71,6 +71,18 @@ else
                     | $a + $b
                 ' "$OVERRIDE" "$OUT_DIR/$id.yaml" > "$CONFIG"
 
+                ts=$(date +%s)
+                
+                $YQ eval --arg ts "$ts" '
+                    .subscriptions |= map(
+                        if .select == true then
+                            .update = ($ts | tonumber)
+                        else
+                            .
+                        end
+                    )
+                ' "$BASE" -i
+
 
                 set -e
             ) || true
