@@ -75,27 +75,6 @@ Future<void> yamlWrite(Map<String, dynamic> data, String targetPath) async {
   if (result.exitCode != 0) throw Exception(result.stderr);
 }
 
-Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic> override) {
-  final result = Map<String, dynamic>.from(base);
-
-  override.forEach((key, value) {
-    if (key.endsWith('!')) {
-      final realKey = key.substring(0, key.length - 1);
-      result[realKey] = value;
-      return;
-    }
-
-    final baseValue = result[key];
-
-    if (value is Map<String, dynamic> && baseValue is Map<String, dynamic>) {
-      result[key] = overrideMap(baseValue, value);
-    } else {
-      result[key] = value;
-    }
-  });
-
-  return result;
-}
 
 Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int timeout) async {
   final dio = Dio();
