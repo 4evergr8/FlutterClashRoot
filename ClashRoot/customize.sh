@@ -33,5 +33,8 @@ for FILE in override.yaml data.yaml config.yaml; do
 done
 
 
+chmod +x "$MODPATH/clash"
+chmod +x "$MODPATH/tool/yq"
+chmod +x "$MODPATH/tool/curl"
 
 ui_print "安装完成"
