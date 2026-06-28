@@ -8,7 +8,7 @@ KILL_CMD="killall clash"
 TEST_CMD="cd $CLASH_DIR && $CLASH_BIN -t -d ."
 CHECK_CMD="ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status"
 
-YQ="$CLASH_DIR/tool/yq"
+YQ="$CLASH_DIR/yq"
 WGET="busybox wget"
 
 BASE="$CLASH_DIR/data.yaml"
