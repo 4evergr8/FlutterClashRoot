@@ -34,7 +34,6 @@ done
 
 
 chmod +x "$MODPATH/clash"
-chmod +x "$MODPATH/tool/yq"
-chmod +x "$MODPATH/tool/curl"
+chmod +x "$MODPATH/yq"
 
 ui_print "安装完成"
