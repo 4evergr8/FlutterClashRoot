@@ -12,7 +12,7 @@ Tile onTileClicked(Tile tile) {
   final isActive = tile.tileStatus == TileStatus.active;
 
   if (isActive) {
-    Process.start("su", ["-c", "sh", scriptPath, "kill"]);
+    Process.runSync("su", ["-c", "sh", scriptPath, "kill"]);
 
     tile
       ..tileStatus = TileStatus.inactive
@@ -20,7 +20,7 @@ Tile onTileClicked(Tile tile) {
       ..drawableName = "alarm_off"
       ..contentDescription = "Clash核心已停止";
   } else {
-    Process.start("su", ["-c", "sh", scriptPath, "start"]);
+    Process.runSync("su", ["-c", "sh", scriptPath, "start"]);
     tile
       ..tileStatus = TileStatus.active
       ..label = "ClashRoot"
