@@ -55,17 +55,11 @@ elif [ "$CMD" = "loop" ]; then
 
     apply_config "$OUT_DIR/$id.yaml"
 
-    ts=$(date +%s)
+    ts=$(date +%s%3N)
 
-    $YQ eval --arg ts "$ts" '
-        .subscriptions |= map(
-            if .select == true then
-                .update = ($ts | tonumber)
-            else
-                .
-            end
-        )
-    ' "$BASE" -i
+    $YQ e "
+      (.subscriptions[] | select(.select == true) | .update) = $ts
+    " -i "$BASE"
 
     kill
     start
@@ -91,17 +85,11 @@ else
 
                 apply_config "$OUT_DIR/$id.yaml"
 
-                ts=$(date +%s)
+                ts=$(date +%s%3N)
 
-                $YQ eval --arg ts "$ts" '
-                    .subscriptions |= map(
-                        if .select == true then
-                            .update = ($ts | tonumber)
-                        else
-                            .
-                        end
-                    )
-                ' "$BASE" -i
+                $YQ e "
+                  (.subscriptions[] | select(.select == true) | .update) = $ts
+                " -i "$BASE"
 
             ) || true
 
