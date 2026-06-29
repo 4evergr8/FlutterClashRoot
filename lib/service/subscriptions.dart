@@ -42,9 +42,7 @@ String canonicalUrl(String input) {
   return Uri(scheme: scheme, host: host, path: path, query: query.isEmpty ? null : query).toString();
 }
 
-String formatTimeAgo(String timestampMsStr) {
-  final pastMs = int.tryParse(timestampMsStr);
-  if (pastMs == null) return '时间格式错误';
+String formatTimeAgo(int pastMs) {
   final nowMs = DateTime.now().millisecondsSinceEpoch;
   int seconds = (nowMs - pastMs) ~/ 1000;
 
