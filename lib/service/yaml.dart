@@ -173,7 +173,7 @@ Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int 
       'download': downloadBytes,
       'total': total,
       'expire': expire,
-      'update': DateTime.now().millisecondsSinceEpoch.toString(),
+      'update': DateTime.now().millisecondsSinceEpoch,
     };
   } catch (e) {
     final f = File(filePath);
