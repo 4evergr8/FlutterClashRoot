@@ -49,16 +49,13 @@ class _ControlViewState extends State<ControlView> with AutomaticKeepAliveClient
   }
 
   Future<void> _runCheck() async {
-    final close = showSnackBarGlobal("load", "请稍候...");
     try {
       final result = await clashCheck();
       setState(() {
         // 4. 更新文本时，直接修改 text 属性
         _displayController.text = result;
       });
-      close();
     } catch (e) {
-      close();
       showSnackBarGlobal("error", '$e');
     }
   }
