@@ -17,7 +17,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
   late final PageController _pageController;
 
-  static final List<Widget> _widgetOptions = <Widget>[SubscriptionView(), ProxiesView(), SplitView(), ControlView()];
+  List<Widget> get _widgetOptions => [SubscriptionView(), ProxiesView(), SplitView(), ControlView()];
 
   @override
   void initState() {
