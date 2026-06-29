@@ -1,10 +1,18 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
-Future<void> clashKill() async {
+Future<String> clashKill() async {
+  final result = await Process.run("su", ["-c", "sh", scriptPath, "kill"]);
+
+  final code = result.exitCode;
+  final output = result.stdout.toString();
+  final error = result.stderr.toString();
+
+  if (code != 0) {
+    return "FAIL\n$output\n$error";
+  }
   await QuickSettings.syncTile(
     Tile(
       label: "ClashRoot",
@@ -13,10 +21,19 @@ Future<void> clashKill() async {
       contentDescription: "Clash核心已停止",
     ),
   );
-   Process.start("su", ["-c", "sh", scriptPath, "kill"]);
+  return "OK\n$output";
 }
 
-Future<void> clashStart() async {
+Future<String> clashStart() async {
+  final result = await Process.run("su", ["-c", "sh", scriptPath, "start"]);
+
+  final code = result.exitCode;
+  final output = result.stdout.toString();
+  final error = result.stderr.toString();
+
+  if (code != 0) {
+    return "FAIL\n$output\n$error";
+  }
   await QuickSettings.syncTile(
     Tile(
       label: "ClashRoot",
@@ -25,16 +42,25 @@ Future<void> clashStart() async {
       contentDescription: "Clash核心已启动",
     ),
   );
-   Process.start("su", ["-c", "sh", scriptPath, "start"]);
-
+  return "OK\n$output";
 }
 
 Future<String> clashTest() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "test"]);
-  return (result.stdout.toString() + result.stderr.toString()).trim();
+
+  final code = result.exitCode;
+  final output = result.stdout.toString();
+  final error = result.stderr.toString();
+
+  return "code=$code\n$output\n$error".trim();
 }
 
 Future<String> clashCheck() async {
   final result = await Process.run("su", ["-c", "sh", scriptPath, "check"]);
-  return (result.stdout.toString() + result.stderr.toString()).trim();
+
+  final code = result.exitCode;
+  final output = result.stdout.toString();
+  final error = result.stderr.toString();
+
+  return "code=$code\n$output\n$error".trim();
 }
