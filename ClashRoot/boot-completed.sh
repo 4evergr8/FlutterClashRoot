@@ -37,7 +37,8 @@ elif [ "$CMD" = "test" ]; then
     "$CLASH_BIN" -t -d "$CLASH_DIR"
 
 elif [ "$CMD" = "check" ]; then
-    ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status
+    ps -p "$(pidof clash)" -o pid,ppid,%cpu,%mem,cmd
+    cat /proc/"$(pidof clash)"/status
 
 elif [ "$CMD" = "yaml" ]; then
 
