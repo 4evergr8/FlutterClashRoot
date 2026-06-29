@@ -10,10 +10,10 @@ OVERRIDE="$CLASH_DIR/override.yaml"
 OUT_DIR="$CLASH_DIR/config"
 CONFIG="$CLASH_DIR/config.yaml"
 CMD="$1"
-start() {
+start_clash() {
     setsid "$CLASH_BIN" -d "$CLASH_DIR" >"$CLASH_LOG" 2>&1 &
 }
-kill() {
+kill_clash() {
     killall clash
 }
 apply_config() {
@@ -25,20 +25,19 @@ apply_config() {
 }
 
 if [ "$CMD" = "start" ]; then
-    kill
-    start
+    kill_clash
+    start_clash
     echo "启动完毕"
 
 elif [ "$CMD" = "kill" ]; then
-    kill
+    kill_clash
     echo "停止完毕"
 
 elif [ "$CMD" = "test" ]; then
     "$CLASH_BIN" -t -d "$CLASH_DIR"
 
 elif [ "$CMD" = "check" ]; then
-    ps -p "$(pidof clash)" -o pid,ppid,%cpu,%mem,cmd
-    cat /proc/"$(pidof clash)"/status
+    eval "ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status"
 
 elif [ "$CMD" = "yaml" ]; then
 
@@ -61,12 +60,12 @@ elif [ "$CMD" = "loop" ]; then
       (.subscriptions[] | select(.select == true) | .update) = $ts
     " -i "$BASE"
 
-    kill
-    start
+    kill_clash
+    start_clash
 
 else
-    kill
-    start
+    kill_clash
+    start_clash
 
     while true; do
         sleep 3600
@@ -93,8 +92,8 @@ else
 
             ) || true
 
-            kill
-            start
+            kill_clash
+            start_clash
         fi
 
     done
