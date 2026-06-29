@@ -11,7 +11,7 @@ Future<String> clashKill() async {
   final error = result.stderr.toString();
 
   if (code != 0) {
-    return "FAIL\n$output\n$error";
+    throw Exception("FAIL\n$output\n$error");
   }
   await QuickSettings.syncTile(
     Tile(
@@ -32,7 +32,7 @@ Future<String> clashStart() async {
   final error = result.stderr.toString();
 
   if (code != 0) {
-    return "FAIL\n$output\n$error";
+    throw Exception("FAIL\n$output\n$error");
   }
   await QuickSettings.syncTile(
     Tile(
