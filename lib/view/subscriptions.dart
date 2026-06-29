@@ -252,7 +252,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  '上次更新: ${formatTimeAgo(sub['update'] as String)}',
+                                  '上次更新: ${formatTimeAgo(sub['update'])}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodySmall,
