@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-SCRIPT_LOG="/data/adb/modules/ClashRoot/daemon.log"
+DAEMON_LOG="/data/adb/modules/ClashRoot/daemon.log"
 CMD_LOG="/data/adb/modules/ClashRoot/cmd.log"
 
 
