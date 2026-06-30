@@ -1,5 +1,8 @@
 #!/system/bin/sh
 
+SCRIPT_LOG="/data/adb/modules/ClashRoot/script.log"
+exec >>"$SCRIPT_LOG" 2>&1
+set -x
 CLASH_DIR="/data/adb/modules/ClashRoot"
 CLASH_BIN="$CLASH_DIR/clash"
 CLASH_LOG="$CLASH_DIR/clash.log"
