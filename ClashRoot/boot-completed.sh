@@ -1,9 +1,6 @@
 #!/system/bin/sh
 
 DAEMON_LOG="/data/adb/modules/ClashRoot/daemon.log"
-CMD_LOG="/data/adb/modules/ClashRoot/cmd.log"
-
-
 
 
 log() {
@@ -42,36 +39,30 @@ apply_config() {
 }
 
 if [ "$CMD" = "start" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=start"
     kill_clash
     start_clash
     echo "启动完毕"
 
 elif [ "$CMD" = "kill" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=kill"
     kill_clash
     echo "停止完毕"
 
 elif [ "$CMD" = "test" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=test"
     "$CLASH_BIN" -t -d "$CLASH_DIR"
 
 elif [ "$CMD" = "check" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=check"
     eval "ps -p \$(pidof clash) -o pid,ppid,%cpu,%mem,cmd; cat /proc/\$(pidof clash)/status"
 
 elif [ "$CMD" = "yaml" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=yaml"
     BASE_YAML="$2"
     apply_config "$BASE_YAML"
 
 elif [ "$CMD" = "loop" ]; then
-    exec >"$CMD_LOG" 2>&1
     log "CMD=loop"
 
     ua=$($YQ eval -r '.ua' "$BASE")
