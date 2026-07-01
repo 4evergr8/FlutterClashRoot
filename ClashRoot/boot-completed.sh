@@ -63,7 +63,9 @@ elif [ "$CMD" = "yaml" ]; then
     apply_config "$BASE_YAML"
 
 elif [ "$CMD" = "loop" ]; then
-    log "CMD=loop"
+    exec >"$DAEMON_LOG" 2>&1
+    log "trigger update"
+
 
     ua=$($YQ eval -r '.ua' "$BASE")
     id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
@@ -81,51 +83,16 @@ elif [ "$CMD" = "loop" ]; then
       (.subscriptions[] | select(.select == true) | .update) = $ts
     " -i "$BASE"
 
+    log "update done"
+
+
+
     kill_clash
     start_clash
+    log "restart clash done"
 
 else
-    exec >"$DAEMON_LOG" 2>&1
-    log "CMD=loop-service start"
+    log "boot start"
     kill_clash
     start_clash
-
-    while true; do
-        sleep 3600
-
-        HOUR=$(date +%H)
-        log "loop tick hour=$HOUR"
-
-        if [ $((10#$HOUR % 8)) -eq 6 ]; then
-
-            log "trigger update"
-
-            (
-                ua=$($YQ eval -r '.ua' "$BASE")
-                id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
-                link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
-
-                log "download $id"
-
-                $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
-
-                apply_config "$OUT_DIR/$id.yaml"
-
-                ts=$(date +%s%3N)
-
-                $YQ e "
-                  (.subscriptions[] | select(.select == true) | .update) = $ts
-                " -i "$BASE"
-
-                log "update done"
-
-            ) || true
-
-            kill_clash
-            start_clash
-
-            log "restart clash done"
-        fi
-
-    done
 fi
