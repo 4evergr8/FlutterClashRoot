@@ -39,10 +39,10 @@
         </activity>
 
         <!-- ⭐关键：前台服务必须声明 -->
-        <service
-                android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-                android:exported="false"
-                android:foregroundServiceType="dataSync" />
+<!--        <service-->
+<!--                android:name="com.pravera.flutter_foreground_task.service.ForegroundService"-->
+<!--                android:exported="false"-->
+<!--                android:foregroundServiceType="dataSync" />-->
 
         <meta-data
                 android:name="flutterEmbedding"
