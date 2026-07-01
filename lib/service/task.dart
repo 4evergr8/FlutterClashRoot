@@ -11,7 +11,7 @@ const String taskName = "订阅更新";
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    Process.run("su", ["-c", "sh", scriptPath, "loop"]);
+    await Process.run("su", ["-c", "sh", scriptPath, "loop"]);
     return Future.value(true);
   });
 }
