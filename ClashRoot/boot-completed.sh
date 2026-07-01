@@ -116,7 +116,6 @@ elif [ "$CMD" = "loop" ]; then
     log "restart clash done"
 
 else
-    exec >"$DAEMON_LOG" 2>&1
     log "boot start"
     kill_clash
     start_clash
