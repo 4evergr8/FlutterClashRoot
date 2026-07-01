@@ -66,14 +66,40 @@ elif [ "$CMD" = "loop" ]; then
     exec >"$DAEMON_LOG" 2>&1
     log "trigger update"
 
-
     ua=$($YQ eval -r '.ua' "$BASE")
     id=$($YQ eval -r '.subscriptions[] | select(.select == true) | .id' "$BASE" | head -n 1)
     link=$($YQ eval -r '.subscriptions[] | select(.select == true) | .link' "$BASE" | head -n 1)
 
     log "download $id"
 
-    $WGET --user-agent="$ua" -O "$OUT_DIR/$id.yaml" "$link"
+    TEMP_YAML="$OUT_DIR/temp.yaml"
+
+    $WGET --user-agent="$ua" -O "$TEMP_YAML" "$link"
+
+    # 读取 proxies / proxy-providers 数组长度
+    proxies_len=$($YQ eval '.proxies | length' "$TEMP_YAML")
+    providers_len=$($YQ eval '.["proxy-providers"] | length' "$TEMP_YAML")
+
+    # 统一处理 null（yq 可能返回 null）
+    if [ "$proxies_len" = "null" ]; then
+        proxies_len=0
+    fi
+
+    if [ "$providers_len" = "null" ]; then
+        providers_len=0
+    fi
+
+    log "proxies=$proxies_len providers=$providers_len"
+
+    # 两个都不存在或都为空 → 不更新
+    if [ "$proxies_len" -le 0 ] && [ "$providers_len" -le 0 ]; then
+        log "empty config, skip update"
+        rm -f "$TEMP_YAML"
+        exit 0
+    fi
+
+    # 至少一个有内容 → 覆盖 id.yaml
+    mv "$TEMP_YAML" "$OUT_DIR/$id.yaml"
 
     apply_config "$OUT_DIR/$id.yaml"
 
@@ -85,13 +111,12 @@ elif [ "$CMD" = "loop" ]; then
 
     log "update done"
 
-
-
     kill_clash
     start_clash
     log "restart clash done"
 
 else
+    exec >"$DAEMON_LOG" 2>&1
     log "boot start"
     kill_clash
     start_clash
