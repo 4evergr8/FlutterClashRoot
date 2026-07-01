@@ -1,8 +1,10 @@
 import 'package:clashroot/service/notification.dart';
+import 'package:clashroot/service/task.dart';
 import 'package:clashroot/service/tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
+import 'package:workmanager/workmanager.dart';
 
 import 'theme/theme.dart';
 import 'theme/util.dart';
@@ -13,7 +15,8 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<Scaffol
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
+  Workmanager().initialize(callbackDispatcher);
+  registerWorkManagerTask();
   QuickSettings.setup(onTileClicked: onTileClicked, onTileAdded: onTileAdded, onTileRemoved: onTileRemoved);
 
   runApp(const MyApp());
