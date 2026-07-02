@@ -50,4 +50,9 @@ else
     log "boot start"
     kill_clash
     start_clash
+
+    while true; do
+        sleep 3600
+        log "heartbeat: clash daemon alive"
+    done
 fi
