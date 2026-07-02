@@ -48,16 +48,6 @@ jobs:
           gunzip -f ClashRoot/clash.gz
           chmod +x ClashRoot/clash
 
-      - name: 下载 yq (arm64)
-        run: |
-          YQ_URL=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest \
-            | grep -oP '"browser_download_url": "\K.*?yq_linux_arm64(?=")' \
-            | head -n 1)
-
-          echo "Downloading yq: $YQ_URL"
-          curl -L -o ClashRoot/yq "$YQ_URL"
-          chmod +x ClashRoot/yq
-
       - name: 下载最新版本MetaCubeXD
         run: |
           RELEASE_JSON=$(curl -s https://api.github.com/repos/MetaCubeX/metacubexd/releases/latest)
