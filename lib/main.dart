@@ -1,3 +1,4 @@
+import 'package:clashroot/service/notification.dart';
 import 'package:clashroot/service/task.dart';
 import 'package:clashroot/service/tile.dart';
 import 'package:flutter/material.dart';
@@ -18,7 +19,7 @@ void main() async {
   registerWorkManagerTask();
   QuickSettings.setup(onTileClicked: onTileClicked, onTileAdded: onTileAdded, onTileRemoved: onTileRemoved);
   runApp(const MyApp());
-  // startMonitorService();
+  startMonitorService();
 }
 
 class MyApp extends StatelessWidget {
