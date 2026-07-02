@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
-import 'package:clashroot/service/task.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -20,8 +19,6 @@ Tile onTileClicked(Tile tile) {
       ..contentDescription = "Clash核心已停止";
   } else {
     Process.runSync("su", ["-c", "sh", scriptPath, "start"]);
-    Workmanager().initialize(callbackDispatcher);
-    registerWorkManagerTask();
     tile
       ..tileStatus = TileStatus.active
       ..label = "ClashRoot"
