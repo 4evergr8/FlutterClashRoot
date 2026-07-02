@@ -1,18 +1,18 @@
 #!/system/bin/sh
 
-DAEMON_LOG="/data/adb/modules/ClashRoot/daemon.log"
 
 
-log() {
-    echo "[$(date '+%F %T')] $*"
-}
+
+
 set -x
-
+DAEMON_LOG="/data/adb/modules/ClashRoot/daemon.log"
 CLASH_DIR="/data/adb/modules/ClashRoot"
 CLASH_BIN="$CLASH_DIR/clash"
 CLASH_LOG="$CLASH_DIR/clash.log"
 CMD="$1"
-
+log() {
+    echo "[$(date '+%F %T')] $*"
+}
 start_clash() {
     log "start_clash"
     setsid "$CLASH_BIN" -d "$CLASH_DIR" >"$CLASH_LOG" 2>&1 &
@@ -53,6 +53,7 @@ else
 
     while true; do
         sleep 3600
-        log "heartbeat: clash daemon alive"
+        : > "$CLASH_LOG"
+        log "clash.log 已清空"
     done
 fi
