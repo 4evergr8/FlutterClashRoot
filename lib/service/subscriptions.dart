@@ -121,15 +121,6 @@ Future<void> subscriptionsSwitch(String id) async {
   final yaml = overrideMap(base, override);
   await yamlWrite(yaml, configPath);
   await clashStart();
-
-// Future<void> subscriptionsSwitch(String id) async {
-//   final result = await Process.run("su", ["-c", "sh", scriptPath, "yaml", "$mainPath/config/$id.yaml"]);
-//   if (result.exitCode != 0) {
-//     throw Exception("执行失败: ${result.stderr}");
-//   }
-//   await clashStart();
-
-
 }
 
 Future<Map<String, dynamic>> subscriptionsRefresh(Map<String, dynamic> data) async {
