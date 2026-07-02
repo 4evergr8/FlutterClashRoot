@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clashroot/service/notification.dart';
 import 'package:clashroot/service/path.dart';
 import 'package:clashroot/service/subscriptions.dart';
 import 'package:clashroot/service/yaml.dart';
@@ -373,16 +374,28 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'add',
-        onPressed: () async {
-          final links = await _dialogSubscriptionAdd(context);
+      floatingActionButton: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton(
+            onPressed: () async {
+              await startMonitorService();
+              SystemNavigator.pop();
+            },
+            child: const Icon(Icons.settings),
+          ),
+          const SizedBox(width: 12),
+          FloatingActionButton(
+            onPressed: () async {
+              final links = await _dialogSubscriptionAdd(context);
 
-          if (links != null && links.trim().isNotEmpty) {
-            await _subscriptionsAdd(links);
-          }
-        },
-        child: const Icon(Icons.add),
+              if (links != null && links.trim().isNotEmpty) {
+                await _subscriptionsAdd(links);
+              }
+            },
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
