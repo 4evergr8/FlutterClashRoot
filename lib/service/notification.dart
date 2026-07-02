@@ -95,7 +95,7 @@ void startCallback() {
   FlutterForegroundTask.setTaskHandler(MyTaskHandler());
 }
 
-void startMonitorService() async {
+Future<void> startMonitorService() async{
   FlutterForegroundTask.init(
     androidNotificationOptions: AndroidNotificationOptions(
       channelId: 'clash_channel',
