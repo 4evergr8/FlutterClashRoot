@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
-import 'package:workmanager/workmanager.dart';
 
 @pragma('vm:entry-point')
 Tile onTileClicked(Tile tile) {
@@ -10,7 +9,6 @@ Tile onTileClicked(Tile tile) {
 
   if (isActive) {
     Process.runSync("su", ["-c", "sh", scriptPath, "kill"]);
-    Workmanager().cancelAll();
 
     tile
       ..tileStatus = TileStatus.inactive
