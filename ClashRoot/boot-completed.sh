@@ -23,14 +23,6 @@ kill_clash() {
     killall clash
 }
 
-apply_config() {
-    log "apply_config $1"
-    $YQ eval-all '
-        select(fileIndex == 1) as $a
-        | select(fileIndex == 0) as $b
-        | $b * $a
-    ' "$OVERRIDE" "$1" > "$CONFIG"
-}
 
 if [ "$CMD" = "start" ]; then
     log "CMD=start"
@@ -54,6 +46,7 @@ elif [ "$CMD" = "check" ]; then
 
 
 else
+    exec >"$DAEMON_LOG" 2>&1
     log "boot start"
     kill_clash
     start_clash
