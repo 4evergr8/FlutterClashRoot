@@ -1,4 +1,3 @@
-import 'package:clashroot/service/notification.dart';
 import 'package:clashroot/service/tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,7 +14,6 @@ void main() async {
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   QuickSettings.setup(onTileClicked: onTileClicked, onTileAdded: onTileAdded, onTileRemoved: onTileRemoved);
   runApp(const MyApp());
-  startMonitorService();
 }
 
 class MyApp extends StatelessWidget {
