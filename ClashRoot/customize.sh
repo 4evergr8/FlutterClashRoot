@@ -1,23 +1,7 @@
 #!/system/bin/sh
 ui_print "==> 开始自定义安装: ClashRoot"
 
-# -----------------------------
-# 1. APK 安装
-# -----------------------------
-APK_PATH="$MODPATH/system/app/ClashRoot/ClashRoot.apk"
-if [ -f "$APK_PATH" ]; then
-    ui_print "尝试安装 APK..."
-    pm install -r "$APK_PATH"
-    if [ $? -eq 0 ]; then
-        ui_print "APK 安装成功"
-    else
-        ui_print "警告: APK 安装失败,请开启核心破解或手动安装"
-    fi
-fi
 
-# -----------------------------
-# 2. 恢复配置文件
-# -----------------------------
 OLD_PATH="/data/adb/modules/ClashRoot"
 
 if [ -d "$OLD_PATH/config" ]; then
@@ -34,6 +18,5 @@ done
 
 
 chmod +x "$MODPATH/clash"
-chmod +x "$MODPATH/yq"
 
 ui_print "安装完成"
