@@ -11,13 +11,12 @@ const String taskName = "订阅更新";
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    await Process.run("su", ["-c", "sh", scriptPath, "loop"]);
+    await Process.run("su", ["-c", "sh", scriptPath, "start"]);
     return Future.value(true);
   });
 }
 
 
-// 注册函数（main 调用这个）
 Future<void> registerWorkManagerTask() async {
   final settings = await yamlRead(dataPath);
   final raw = settings['interval'];
