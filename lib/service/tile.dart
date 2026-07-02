@@ -1,11 +1,9 @@
 import 'dart:io';
 
 import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/task.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
-
-/// =======================
-/// Tile callbacks
-/// =======================
+import 'package:workmanager/workmanager.dart';
 
 @pragma('vm:entry-point')
 Tile onTileClicked(Tile tile) {
@@ -13,6 +11,7 @@ Tile onTileClicked(Tile tile) {
 
   if (isActive) {
     Process.runSync("su", ["-c", "sh", scriptPath, "kill"]);
+    Workmanager().cancelAll();
 
     tile
       ..tileStatus = TileStatus.inactive
@@ -21,6 +20,8 @@ Tile onTileClicked(Tile tile) {
       ..contentDescription = "Clash核心已停止";
   } else {
     Process.runSync("su", ["-c", "sh", scriptPath, "start"]);
+    Workmanager().initialize(callbackDispatcher);
+    registerWorkManagerTask();
     tile
       ..tileStatus = TileStatus.active
       ..label = "ClashRoot"
