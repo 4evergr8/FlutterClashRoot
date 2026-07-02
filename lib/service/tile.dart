@@ -1,22 +1,18 @@
-import 'dart:io';
-
-import 'package:clashroot/service/path.dart';
+import 'package:clashroot/service/control.dart';
 import 'package:quick_settings_with_flutter_plugins/quick_settings.dart';
 
 @pragma('vm:entry-point')
 Tile onTileClicked(Tile tile) {
-  final isActive = tile.tileStatus == TileStatus.active;
-
-  if (isActive) {
-    Process.runSync("su", ["-c", "sh", scriptPath, "kill"]);
-
+  final oldStatus = tile.tileStatus;
+  if (oldStatus == TileStatus.active) {
+    clashKill();
     tile
       ..tileStatus = TileStatus.inactive
       ..label = "ClashRoot"
       ..drawableName = "alarm_off"
       ..contentDescription = "Clash核心已停止";
   } else {
-    Process.runSync("su", ["-c", "sh", scriptPath, "start"]);
+    clashStart();
     tile
       ..tileStatus = TileStatus.active
       ..label = "ClashRoot"
@@ -27,11 +23,12 @@ Tile onTileClicked(Tile tile) {
 }
 
 @pragma('vm:entry-point')
-Tile? onTileAdded(Tile tile) {
-  tile.label = "ClashRoot";
-  tile.drawableName = "alarm_off";
-  tile.contentDescription = "Clash核心控制";
-  tile.tileStatus = TileStatus.inactive;
+Tile onTileAdded(Tile tile) {
+  tile
+    ..tileStatus = TileStatus.inactive
+    ..label = "ClashRoot"
+    ..drawableName = "alarm_off"
+    ..contentDescription = "Clash核心已停止";
   return tile;
 }
 
