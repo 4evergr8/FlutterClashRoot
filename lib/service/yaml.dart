@@ -7,6 +7,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 
+Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic> override) {
+  final result = Map<String, dynamic>.from(base); // 拷贝一份 base
+  override.forEach((key, value) {
+    result[key] = value; // 顶层覆盖
+  });
+  return result;
+}
+
 dynamic _convertYaml(dynamic node) {
   // 1. YamlMap → 强制 Map<String, dynamic>
   if (node is YamlMap) {
@@ -74,7 +82,6 @@ Future<void> yamlWrite(Map<String, dynamic> data, String targetPath) async {
   final result = await Process.run('su', ['-c', 'cp $localPath $targetPath && chmod 777 $targetPath']);
   if (result.exitCode != 0) throw Exception(result.stderr);
 }
-
 
 Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int timeout) async {
   final dio = Dio();
