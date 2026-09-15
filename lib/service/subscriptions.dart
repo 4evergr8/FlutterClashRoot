@@ -158,7 +158,6 @@ Future<Map<String, dynamic>> subscriptionsRefresh(Map<String, dynamic> data) asy
     resultMap[id] = {
       ...old,
       'expire': downloadResult['expire'] ?? old['expire'],
-      'update': downloadResult['update'] ?? old['update'],
       'upload': downloadResult['upload'] ?? old['upload'],
       'download': downloadResult['download'] ?? old['download'],
       'total': downloadResult['total'] ?? old['total'],

@@ -83,6 +83,44 @@ Future<void> yamlWrite(Map<String, dynamic> data, String targetPath) async {
   if (result.exitCode != 0) throw Exception(result.stderr);
 }
 
+/// 批量读取订阅配置文件的修改时间（毫秒）
+///
+/// 文件不存在或读取失败的条目记为 0。
+/// 由于 /data/adb 对 App 不可见，必须借助 su 执行 stat；
+/// 为避免每个订阅启动一次 su 进程，这里按批合并成一次调用。
+Future<Map<String, int>> fileModifiedMs(List<String> ids) async {
+  final result = <String, int>{for (final id in ids) id: 0};
+  if (ids.isEmpty) return result;
+
+  const int batchSize = 30;
+
+  for (var start = 0; start < ids.length; start += batchSize) {
+    final batch = ids.skip(start).take(batchSize).toList();
+    final paths = batch.map((id) => "'$mainPath/config/$id.yaml'").join(' ');
+
+    // 个别文件缺失时 stat 返回非 0，但其余结果仍然有效，故只看 stdout
+    final r = await Process.run('su', ['-c', 'stat -c "%n %Y" $paths']);
+
+    for (final line in r.stdout.toString().split('\n')) {
+      final text = line.trim();
+      if (text.isEmpty) continue;
+
+      final split = text.lastIndexOf(' ');
+      if (split <= 0) continue;
+
+      final seconds = int.tryParse(text.substring(split + 1).trim());
+      if (seconds == null) continue;
+
+      final name = basename(text.substring(0, split).trim());
+      final id = name.endsWith('.yaml') ? name.substring(0, name.length - 5) : name;
+
+      result[id] = seconds * 1000;
+    }
+  }
+
+  return result;
+}
+
 Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int timeout) async {
   final dio = Dio();
   final dir = await getApplicationDocumentsDirectory();
@@ -180,7 +218,6 @@ Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int 
       'download': downloadBytes,
       'total': total,
       'expire': expire,
-      'update': DateTime.now().millisecondsSinceEpoch,
     };
   } catch (e) {
     final f = File(filePath);

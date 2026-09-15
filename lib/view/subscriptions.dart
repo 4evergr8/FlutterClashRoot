@@ -18,6 +18,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
   @override
   bool get wantKeepAlive => false;
   Map<String, dynamic> data = {};
+  Map<String, int> updateTimes = {};
 
   @override
   void initState() {
@@ -25,9 +26,17 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     _init();
   }
 
+  /// 更新时间只存在于运行时，不进入 data，也就不会被写进 data.yaml
+  Future<void> _loadTimes() async {
+    final list = (data['subscriptions'] as List?) ?? [];
+    final ids = list.map((e) => e['id']?.toString()).whereType<String>().toList();
+    updateTimes = await fileModifiedMs(ids);
+  }
+
   Future<void> _init() async {
     try {
       data = await subscriptionsLoad();
+      await _loadTimes();
       setState(() {});
     } catch (e) {
       showSnackBarGlobal("error", '$e');
@@ -53,6 +62,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     try {
       data = await subscriptionsRefresh(data);
       data = await subscriptionsLoad(data);
+      await _loadTimes();
       await yamlWrite(data, dataPath);
       final subs = data['subscriptions'];
       final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
@@ -70,6 +80,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
     try {
       data = await subscriptionsAdd(data, input);
       data = await subscriptionsLoad(data);
+      await _loadTimes();
       await yamlWrite(data, dataPath);
       close();
       showSnackBarGlobal("success", "全部添加完成");
@@ -85,6 +96,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
       data['subscriptions'].removeWhere((s) => s['id'] == id);
       await Process.run('su', ['-c', 'rm -f $mainPath/config/$id.yaml']);
       data = await subscriptionsLoad(data);
+      await _loadTimes();
       await yamlWrite(data, dataPath);
       setState(() {});
     } catch (e) {
@@ -252,7 +264,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                 ),
                                 const SizedBox(height: 3),
                                 Text(
-                                  '上次更新: ${formatTimeAgo(sub['update'])}',
+                                  '上次更新: ${formatTimeAgo(updateTimes[sub['id']] ?? 0)}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.bodySmall,
@@ -313,6 +325,7 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                                         }
 
                                         data['subscriptions'] = list;
+                                        await _loadTimes();
                                         await yamlWrite(data, dataPath);
                                         if (sub['select'] == true) {
                                           await subscriptionsSwitch(sub['id']);
