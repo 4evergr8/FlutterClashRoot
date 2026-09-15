@@ -115,10 +115,27 @@ Future<Map<String, dynamic>> subscriptionsLoad([Map<String, dynamic>? input]) as
 }
 
 Future<void> subscriptionsSwitch(String id) async {
-  final base = await yamlRead("$mainPath/config/$id.yaml");
-  final override = await yamlRead(overridePath);
-  final yaml = overrideMap(base, override);
-  await yamlWrite(yaml, configPath);
+  final data = await yamlRead(dataPath);
+  final sub = (data['subscriptions'] as List).firstWhere((e) => e['id'] == id);
+
+  final config = await yamlRead(configPath);
+
+  final providers = Map<String, dynamic>.from(config['proxy-providers'] ?? {});
+
+  if (providers.isEmpty) {
+    throw Exception('config.yaml 中没有 proxy-providers');
+  }
+
+  final name = providers.keys.first;
+  final provider = Map<String, dynamic>.from(providers[name] ?? {});
+
+  provider['url'] = sub['link'];
+  provider['path'] = './config/$id.yaml';
+
+  providers[name] = provider;
+  config['proxy-providers'] = providers;
+
+  await yamlWrite(config, configPath);
   await clashStart();
 }
 

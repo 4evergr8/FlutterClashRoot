@@ -11,7 +11,7 @@ cp -rf "$OLD_PATH/config" "$MODPATH/"
 ui_print "恢复 log 文件夹"
 cp -rf "$OLD_PATH/log" "$MODPATH/"
 
-for FILE in override.yaml data.yaml config.yaml root; do
+for FILE in data.yaml config.yaml root; do
     if [ -f "$OLD_PATH/$FILE" ]; then
         ui_print "恢复 $FILE"
         cp -f "$OLD_PATH/$FILE" "$MODPATH/"

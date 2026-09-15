@@ -39,18 +39,18 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
-      final override = await yamlRead(overridePath);
+      final config = await yamlRead(configPath);
 
       // 判断名单方向和列表
-      if (override['tun'] != null) {
-        if (override['tun']['include-package'] != null) {
+      if (config['tun'] != null) {
+        if (config['tun']['include-package'] != null) {
           isWhitelist = true;
-          final includePackages = List<String>.from(override['tun']['include-package']);
+          final includePackages = List<String>.from(config['tun']['include-package']);
           yamlPackages = includePackages.toSet();
           selectedPackages = includePackages.toSet();
-        } else if (override['tun']['exclude-package'] != null) {
+        } else if (config['tun']['exclude-package'] != null) {
           isWhitelist = false;
-          final excludePackages = List<String>.from(override['tun']['exclude-package']);
+          final excludePackages = List<String>.from(config['tun']['exclude-package']);
           yamlPackages = excludePackages.toSet();
           selectedPackages = excludePackages.toSet();
         } else {
@@ -115,19 +115,19 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final checkedPackages =
         apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
-    final override = await yamlRead(overridePath);
+    final config = await yamlRead(configPath);
 
-    override['tun'] ??= {};
+    config['tun'] ??= {};
 
     if (isWhitelist) {
-      override['tun']['include-package'] = checkedPackages.toList();
-      override['tun'].remove('exclude-package');
+      config['tun']['include-package'] = checkedPackages.toList();
+      config['tun'].remove('exclude-package');
     } else {
-      override['tun']['exclude-package'] = checkedPackages.toList();
-      override['tun'].remove('include-package');
+      config['tun']['exclude-package'] = checkedPackages.toList();
+      config['tun'].remove('include-package');
     }
 
-    await yamlWrite(override, overridePath);
+    await yamlWrite(config, configPath);
     final data = await subscriptionsLoad();
     final subs = data['subscriptions'];
     final selectedSub = subs.firstWhere((sub) => sub['select'] == true);

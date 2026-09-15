@@ -4,9 +4,9 @@ external-ui: ./metacubexd
 allow-lan: false
 log-level: warning
 ipv6: true
-keep-alive-idle: 15
-keep-alive-interval: 10
-disable-keep-alive: false
+disable-keep-alive: true
+keep-alive-idle: 10
+keep-alive-interval: 60
 unified-delay: false
 tcp-concurrent: true
 geodata-loader: memconservative
@@ -16,11 +16,12 @@ geo-update-interval: 24
 etag-support: true
 geodata-mode: true
 geox-url:
-  geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
-  geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+  geoip: "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+  geosite: "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
 profile:
   store-selected: false
-  store-fake-ip: false
+  store-fake-ip: true
+
 
 tun:
   enable: true
@@ -29,6 +30,7 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
+
 
 dns:
   enable: true
@@ -39,29 +41,109 @@ dns:
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter-mode: blacklist
   fake-ip-filter:
-    - geosite:private
+    - GEOSITE,cn
+    - GEOSITE,googlefcm
+    - GEOSITE,private
   nameserver:
-    - tls://1.12.12.12:853
+    - tls://119.29.29.29:853
     - tls://223.5.5.5:853
+
 
 rules:
   - GEOSITE,category-ads-all,REJECT
-  - DOMAIN-SUFFIX,pages.dev,DIRECT
+
   - GEOSITE,cn,DIRECT
   - GEOIP,cn,DIRECT,no-resolve
+  - GEOIP,private,DIRECT,no-resolve
+
   - GEOSITE,googlefcm,DIRECT
   - GEOSITE,private,DIRECT
-  - GEOIP,private,DIRECT,no-resolve
+
+  - DOMAIN-SUFFIX,pages.dev,DIRECT
+
+  - GEOIP,telegram,🌪️高速下载🌪️,no-resolve
+  - GEOSITE,telegram,🌪️高速下载🌪️
+  - GEOSITE,huggingface,🌪️高速下载🌪️
+  - DOMAIN-SUFFIX,storage.googleapis.com,🌪️高速下载🌪️
+  - GEOSITE,category-netdisk-!cn,🌪️高速下载🌪️
+  - GEOSITE,category-entertainment,🎶媒体娱乐🎶
+
+  - GEOSITE,category-ai-!cn,🧠人工智能🧠
+
+  - GEOSITE,category-cryptocurrency,🪙加密货币🪙
+
   - MATCH,⚡自动选择⚡
+
 
 proxy-groups:
   - name: ⚡自动选择⚡
     type: url-test
     url: https://www.google.com/generate_204
+    expected-status: 204
     interval: 600
     timeout: 3000
-    max-failed-times: 3
-    tolerance: 100
-    exclude-filter: 订阅|到期|官网|剩余|RU|俄罗斯|🇷🇺|KR|韩国|🇰🇷
-    include-all-proxies: true
+    max-failed-times: 5
+    tolerance: 50
+    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|KR|韩国|🇰🇷
+    include-all: true
     proxies: [ ]
+
+  - name: 🧠人工智能🧠
+    type: url-test
+    url: https://api.openai.com/v1/models
+    expected-status: 401
+    interval: 600
+    timeout: 3000
+    max-failed-times: 5
+    tolerance: 50
+    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺
+    include-all: true
+    proxies: [ ]
+
+  - name: 🪙加密货币🪙
+    type: url-test
+    url: https://api.binance.com/api/v3/ping
+    expected-status: 200
+    interval: 600
+    timeout: 3000
+    max-failed-times: 5
+    tolerance: 50
+    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|US|美国|🇺🇸
+    include-all: true
+    proxies: [ ]
+
+  - name: 🎶媒体娱乐🎶
+    type: url-test
+    url: https://music.youtube.com/playlist?list=LM
+    expected-status: 200
+    interval: 600
+    timeout: 3000
+    max-failed-times: 5
+    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|KR|韩国|🇰🇷
+    include-all: true
+    proxies: [ ]
+
+  - name: 🌪️高速下载🌪️
+    type: load-balance
+    strategy: round-robin
+    url: https://kws5.web.telegram.org
+    expected-status: 204
+    interval: 600
+    timeout: 3000
+    max-failed-times: 5
+    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺
+    include-all: true
+    proxies: [ ]
+
+
+proxy-providers:
+  provider:
+    type: http
+    url: ""
+    path:
+    interval: 10800
+    size-limit: 0
+    header:
+      User-Agent:
+        - "clash.meta"
+    exclude-filter: "订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺"

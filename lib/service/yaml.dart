@@ -7,14 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart';
 import 'package:yaml_codec/yaml_codec.dart';
 
-Map<String, dynamic> overrideMap(Map<String, dynamic> base, Map<String, dynamic> override) {
-  final result = Map<String, dynamic>.from(base); // 拷贝一份 base
-  override.forEach((key, value) {
-    result[key] = value; // 顶层覆盖
-  });
-  return result;
-}
-
 dynamic _convertYaml(dynamic node) {
   // 1. YamlMap → 强制 Map<String, dynamic>
   if (node is YamlMap) {
