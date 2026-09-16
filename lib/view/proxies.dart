@@ -24,6 +24,22 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   @override
   bool get wantKeepAlive => false;
 
+  final HttpClient _client = HttpClient();
+
+  // 分组与内置类型，从 /proxies 的返回里剔除，只留真实节点
+  static const _groupTypes = {
+    'Selector',
+    'URLTest',
+    'Fallback',
+    'LoadBalance',
+    'Relay',
+    'Direct',
+    'Reject',
+    'RejectDrop',
+    'Compatible',
+    'Pass',
+  };
+
   List<DelayItem> delayList = [];
   bool isTesting = false;
   int successCount = 0;
@@ -32,20 +48,73 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   String? message;
 
   @override
+  void dispose() {
+    _client.close(force: true);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _loadProxyList();
-      _testDelay();
+      if (delayList.isNotEmpty) _testDelay();
     });
+  }
+
+  /// 等待核心就绪
+  Future<bool> _waitReady(dynamic port, String secret) async {
+    for (var i = 0; i < 6; i++) {
+      try {
+        final req = await _client.getUrl(Uri.parse('http://127.0.0.1:$port/version'));
+        req.headers.set('Authorization', 'Bearer $secret');
+
+        final r = await req.close();
+
+        if (r.statusCode == 200) return true;
+      } catch (_) {}
+
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    return false;
+  }
+
+  /// 节点由 proxy-providers 提供，只有核心知道运行时的真实名单
+  Future<List<String>> _fetchProxyNames(dynamic port, String secret) async {
+    final req = await _client.getUrl(Uri.parse('http://127.0.0.1:$port/proxies'));
+    req.headers.set('Authorization', 'Bearer $secret');
+
+    final res = await req.close();
+
+    final body = await res.transform(utf8.decoder).join();
+
+    final jsonData = json.decode(body) as Map<String, dynamic>;
+
+    final all = (jsonData['proxies'] as Map?) ?? {};
+
+    return all.entries
+        .where((e) {
+          final type = (e.value as Map?)?['type'];
+          return type is String && !_groupTypes.contains(type);
+        })
+        .map((e) => e.key.toString())
+        .toList();
   }
 
   Future<void> _loadProxyList() async {
     try {
-      final config = await yamlRead(configPath);
+      final settings = await yamlRead(dataPath);
 
-      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
+      final port = settings['port'];
+      final secret = settings['secret'] ?? '';
+
+      if (!await _waitReady(port, secret)) {
+        throw Exception('核心未响应');
+      }
+
+      final proxies = await _fetchProxyNames(port, secret);
 
       delayList = proxies.map((e) => DelayItem(e, -1)).toList();
 
@@ -64,10 +133,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     setState(() => isTesting = true);
 
     try {
-      final config = await yamlRead(configPath);
-
-      final proxies = (config['proxies'] as List? ?? []).map((e) => e['name'] as String).toList();
-
       final settings = await yamlRead(dataPath);
 
       final port = settings['port'];
@@ -77,25 +142,21 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       timeout = settings['testtimeout'];
       final expected = settings['expected'];
 
-      for (int i = 1; i < 7; i++) {
-        try {
-          final client = HttpClient();
-          final req = await client.getUrl(Uri.parse('http://127.0.0.1:$port/version'));
-          req.headers.set('Authorization', 'Bearer $secret');
-
-          final r = await req.close();
-
-          if (r.statusCode == 200) {
-            break;
-          }
-        } catch (_) {}
-
-        if (i == 6) return;
-        await Future.delayed(const Duration(milliseconds: 500));
+      if (!await _waitReady(port, secret)) {
+        throw Exception('核心未响应');
       }
 
-      final uri = Uri.parse('http://127.0.0.1:$port/group/GLOBAL/delay?url=$url&timeout=$timeout&expected=$expected');
-      final req = await HttpClient().getUrl(uri);
+      final proxies = await _fetchProxyNames(port, secret);
+
+      final uri = Uri(
+        scheme: 'http',
+        host: '127.0.0.1',
+        port: port,
+        path: '/group/GLOBAL/delay',
+        queryParameters: {'url': '$url', 'timeout': '$timeout', 'expected': '$expected'},
+      );
+
+      final req = await _client.getUrl(uri);
       req.headers.set('Authorization', 'Bearer $secret');
       final res = await req.close();
 
