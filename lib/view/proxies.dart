@@ -45,7 +45,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   int successCount = 0;
   int totalCount = 0;
   int timeout = 0;
-  String? message;
 
   @override
   void dispose() {
@@ -103,6 +102,32 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         .toList();
   }
 
+  /// 单个节点测速，失败或超时记 0
+  Future<int> _fetchDelay(String name, dynamic port, String secret, String url, int timeout) async {
+    try {
+      final uri = Uri(
+        scheme: 'http',
+        host: '127.0.0.1',
+        port: port,
+        path: '/proxies/${Uri.encodeComponent(name)}/delay',
+        queryParameters: {'url': url, 'timeout': '$timeout'},
+      );
+
+      final req = await _client.getUrl(uri);
+      req.headers.set('Authorization', 'Bearer $secret');
+
+      final res = await req.close();
+
+      final body = await res.transform(utf8.decoder).join();
+
+      final jsonData = json.decode(body) as Map<String, dynamic>;
+
+      return jsonData['delay'] as int? ?? 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Future<void> _loadProxyList() async {
     try {
       final settings = await yamlRead(dataPath);
@@ -140,7 +165,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final url = settings['url'];
 
       timeout = settings['testtimeout'];
-      final expected = settings['expected'];
 
       if (!await _waitReady(port, secret)) {
         throw Exception('核心未响应');
@@ -148,67 +172,48 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
       final proxies = await _fetchProxyNames(port, secret);
 
-      final uri = Uri(
-        scheme: 'http',
-        host: '127.0.0.1',
-        port: port,
-        path: '/group/GLOBAL/delay',
-        queryParameters: {'url': '$url', 'timeout': '$timeout', 'expected': '$expected'},
-      );
+      final delays = <String, int>{};
 
-      final req = await _client.getUrl(uri);
-      req.headers.set('Authorization', 'Bearer $secret');
-      final res = await req.close();
+      const batchSize = 32;
 
-      final body = await res.transform(utf8.decoder).join();
+      for (var start = 0; start < proxies.length; start += batchSize) {
+        final batch = proxies.skip(start).take(batchSize).toList();
 
-      final Map<String, dynamic> jsonData = json.decode(body);
-
-      if (jsonData.containsKey('message')) {
-        message = jsonData['message'] as String?;
-
-        successCount = 0;
-      } else {
-        message = null;
-
-        final List<DelayItem> list = [];
-
-        for (final name in proxies) {
-          final delay = jsonData[name];
-
-          if (delay == null) {
-            list.add(DelayItem(name, 0));
-          } else {
-            list.add(DelayItem(name, delay as int));
-          }
-        }
-
-        totalCount = list.length;
-
-        successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
-
-        list.sort((a, b) {
-          if (a.delay <= 0) return 1;
-          if (b.delay <= 0) return -1;
-          return a.delay.compareTo(b.delay);
-        });
-
-        delayList = list;
-
-        final data = await yamlRead(dataPath);
-
-        final subs =
-            (data['subscriptions'] is List)
-                ? List<Map<String, dynamic>>.from(data['subscriptions'])
-                : <Map<String, dynamic>>[];
-
-        final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
-
-        selectedSub['count'] = totalCount;
-        selectedSub['alive'] = successCount;
-
-        await yamlWrite(data, dataPath);
+        await Future.wait(
+          batch.map((name) async {
+            delays[name] = await _fetchDelay(name, port, secret, '$url', timeout);
+          }),
+        );
       }
+
+      final list = proxies.map((e) => DelayItem(e, delays[e] ?? 0)).toList();
+
+      totalCount = list.length;
+
+      successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
+
+      list.sort((a, b) {
+        if (a.delay <= 0) return 1;
+        if (b.delay <= 0) return -1;
+        return a.delay.compareTo(b.delay);
+      });
+
+      delayList = list;
+
+      final data = await yamlRead(dataPath);
+
+      final subs =
+          (data['subscriptions'] is List)
+              ? List<Map<String, dynamic>>.from(data['subscriptions'])
+              : <Map<String, dynamic>>[];
+
+      final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
+
+      selectedSub['count'] = totalCount;
+      selectedSub['alive'] = successCount;
+
+      await yamlWrite(data, dataPath);
+
       close();
       setState(() {});
     } catch (e) {
@@ -257,55 +262,46 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (message != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(message!, style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.bold)),
-                ),
-              )
-            else ...[
-              Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: ListTile(
-                  title: const Text('节点可用率'),
-                  subtitle: totalCount == 0 ? const Text('暂无可用节点') : Text('$successCount / $totalCount'),
-                  trailing: Text(
-                    totalCount == 0 ? '--' : '${(successCount * 100 ~/ totalCount)}%',
-                    style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
-                  ),
+            Card(
+              margin: const EdgeInsets.only(bottom: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              child: ListTile(
+                title: const Text('节点可用率'),
+                subtitle: totalCount == 0 ? const Text('暂无可用节点') : Text('$successCount / $totalCount'),
+                trailing: Text(
+                  totalCount == 0 ? '--' : '${(successCount * 100 ~/ totalCount)}%',
+                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
                 ),
               ),
+            ),
 
-              ...delayList.map((item) {
-                final color = _getColor(context, item.delay);
+            ...delayList.map((item) {
+              final color = _getColor(context, item.delay);
 
-                final isAlive = item.delay > 0 && item.delay < timeout;
+              final isAlive = item.delay > 0 && item.delay < timeout;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  color: colorScheme.surface,
-                  child: ListTile(
-                    title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(_formatDelay(item.delay)),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_formatDelay(item.delay), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.circle,
-                          size: 10,
-                          color: item.delay == -1 ? colorScheme.outline : (isAlive ? color : colorScheme.error),
-                        ),
-                      ],
-                    ),
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                color: colorScheme.surface,
+                child: ListTile(
+                  title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(_formatDelay(item.delay)),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(_formatDelay(item.delay), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: item.delay == -1 ? colorScheme.outline : (isAlive ? color : colorScheme.error),
+                      ),
+                    ],
                   ),
-                );
-              }),
-            ],
+                ),
+              );
+            }),
           ],
         ),
       ),
