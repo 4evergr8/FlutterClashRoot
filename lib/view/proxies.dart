@@ -159,7 +159,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
     setState(() {
       isTesting = true;
-      isWaiting = true;
+      isWaiting = delayList.isEmpty;
       message = null;
     });
 
@@ -174,6 +174,17 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final expected = settings['expected'];
 
       final proxies = await _fetchProxyNames(port, secret);
+
+      if (!mounted) return;
+
+      // 先把节点铺出来，延迟位置显示加载中，等测速完成再回填
+      setState(() {
+        delayList = proxies.map((e) => DelayItem(e, -1)).toList();
+
+        totalCount = delayList.length;
+        successCount = 0;
+        isWaiting = false;
+      });
 
       final uri = Uri(
         scheme: 'http',
@@ -340,19 +351,25 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
                 color: colorScheme.surface,
                 child: ListTile(
                   title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                  subtitle: Text(_formatDelay(item.delay)),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_formatDelay(item.delay), style: TextStyle(color: color, fontWeight: FontWeight.bold)),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.circle,
-                        size: 10,
-                        color: item.delay == -1 ? colorScheme.outline : (isAlive ? color : colorScheme.error),
-                      ),
-                    ],
-                  ),
+                  subtitle: Text(item.delay == -1 ? '测速中…' : _formatDelay(item.delay)),
+                  trailing:
+                      item.delay == -1
+                          ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+                          )
+                          : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _formatDelay(item.delay),
+                                style: TextStyle(color: color, fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.circle, size: 10, color: isAlive ? color : colorScheme.error),
+                            ],
+                          ),
                 ),
               );
             }),
