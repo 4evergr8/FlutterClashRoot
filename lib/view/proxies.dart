@@ -51,6 +51,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
   int successCount = 0;
   int totalCount = 0;
   int timeout = 0;
+  String? message;
 
   @override
   void dispose() {
@@ -84,7 +85,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     throw Exception('页面已关闭');
   }
 
-  /// 节点由 proxy-providers 提供，只有核心知道运行时的真实名单
+  /// GLOBAL 组的全部节点
   ///
   /// 核心刚启动时 provider 可能还没拉完订阅，名单会是空的，所以空名单也继续等
   Future<List<String>> _fetchProxyNames(dynamic port, String secret) async {
@@ -124,29 +125,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     return [];
   }
 
-  /// 单个节点测速，失败或超时记 0
-  Future<int> _fetchDelay(String name, dynamic port, String secret, String url, int timeout) async {
-    try {
-      final uri = Uri(
-        scheme: 'http',
-        host: '127.0.0.1',
-        port: port,
-        path: '/proxies/${Uri.encodeComponent(name)}/delay',
-        queryParameters: {'url': url, 'timeout': '$timeout'},
-      );
-
-      final res = await _get(uri, secret);
-
-      final body = await res.transform(utf8.decoder).join();
-
-      final jsonData = json.decode(body) as Map<String, dynamic>;
-
-      return jsonData['delay'] as int? ?? 0;
-    } catch (_) {
-      return 0;
-    }
-  }
-
   Future<void> _loadProxyList() async {
     setState(() => isWaiting = true);
 
@@ -182,6 +160,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     setState(() {
       isTesting = true;
       isWaiting = true;
+      message = null;
     });
 
     try {
@@ -192,50 +171,60 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final url = settings['url'];
 
       timeout = settings['testtimeout'];
+      final expected = settings['expected'];
 
       final proxies = await _fetchProxyNames(port, secret);
 
-      final delays = <String, int>{};
+      final uri = Uri(
+        scheme: 'http',
+        host: '127.0.0.1',
+        port: port,
+        path: '/group/GLOBAL/delay',
+        queryParameters: {'url': '$url', 'timeout': '$timeout', 'expected': '$expected'},
+      );
 
-      const batchSize = 32;
+      final res = await _get(uri, secret);
 
-      for (var start = 0; start < proxies.length; start += batchSize) {
-        final batch = proxies.skip(start).take(batchSize).toList();
+      final body = await res.transform(utf8.decoder).join();
 
-        await Future.wait(
-          batch.map((name) async {
-            delays[name] = await _fetchDelay(name, port, secret, '$url', timeout);
-          }),
-        );
+      final jsonData = json.decode(body) as Map<String, dynamic>;
+
+      if (!mounted) return;
+
+      if (jsonData.containsKey('message')) {
+        message = jsonData['message'] as String?;
+
+        successCount = 0;
+      } else {
+        // 名单里有、测速结果里没有的节点一律当超时
+        final list = proxies.map((e) => DelayItem(e, (jsonData[e] as int?) ?? 0)).toList();
+
+        totalCount = list.length;
+
+        successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
+
+        list.sort((a, b) {
+          if (a.delay <= 0) return 1;
+          if (b.delay <= 0) return -1;
+          return a.delay.compareTo(b.delay);
+        });
+
+        delayList = list;
+
+        final data = await yamlRead(dataPath);
+
+        final subs =
+            (data['subscriptions'] is List)
+                ? List<Map<String, dynamic>>.from(data['subscriptions'])
+                : <Map<String, dynamic>>[];
+
+        final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
+
+        selectedSub['count'] = totalCount;
+        selectedSub['alive'] = successCount;
+
+        await yamlWrite(data, dataPath);
       }
-
-      final list = proxies.map((e) => DelayItem(e, delays[e] ?? 0)).toList();
-
-      totalCount = list.length;
-
-      successCount = list.where((e) => e.delay > 0 && e.delay < timeout).length;
-
-      list.sort((a, b) {
-        if (a.delay <= 0) return 1;
-        if (b.delay <= 0) return -1;
-        return a.delay.compareTo(b.delay);
-      });
-
-      delayList = list;
-
-      final data = await yamlRead(dataPath);
-
-      final subs =
-          (data['subscriptions'] is List)
-              ? List<Map<String, dynamic>>.from(data['subscriptions'])
-              : <Map<String, dynamic>>[];
-
-      final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
-
-      selectedSub['count'] = totalCount;
-      selectedSub['alive'] = successCount;
-
-      await yamlWrite(data, dataPath);
 
       close();
 
@@ -316,6 +305,14 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
                       Text('等待核心响应…', style: TextStyle(color: colorScheme.secondary)),
                     ],
                   ),
+                ),
+              ),
+
+            if (message != null)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(message!, style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.bold)),
                 ),
               ),
 
