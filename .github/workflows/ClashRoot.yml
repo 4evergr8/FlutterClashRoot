@@ -2,6 +2,14 @@ name: ClashRoot
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号，例如 2.2.4。留空则沿用现有版本号，只追加 commit hash，且不提交'
+        required: false
+        type: string
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -15,10 +23,53 @@ jobs:
         run: |
           echo "SHORT_HASH=$(git rev-parse --short=6 HEAD)" >> $GITHUB_ENV
 
-      - name: 注入 module.prop 版本 hash
+      - name: 计算版本
+        id: version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          HASH=$SHORT_HASH
-          sed -i "s/^version=.*/version=2.2.2-${HASH}/" ClashRoot/module.prop
+          set -e
+
+          PUB_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          PUB_BASE=${PUB_VERSION%%+*}
+          PUB_CODE=${PUB_VERSION##*+}
+
+          PROP_VERSION=$(grep '^version=' ClashRoot/module.prop | cut -d= -f2)
+          PROP_CODE=$(grep '^versionCode=' ClashRoot/module.prop | cut -d= -f2)
+
+          if [ -n "$INPUT_VERSION" ]; then
+            NEW_PUB_BASE="$INPUT_VERSION"
+            NEW_PROP_BASE="$INPUT_VERSION"
+            NEW_PUB_CODE=$((PUB_CODE + 1))
+            NEW_PROP_CODE=$((PROP_CODE + 1))
+          else
+            # 上次提交过的版本号里已带 hash，这里先剥掉，避免多次构建后 hash 累积
+            NEW_PUB_BASE=${PUB_BASE%%-*}
+            NEW_PROP_BASE=${PROP_VERSION%%-*}
+            NEW_PUB_CODE="$PUB_CODE"
+            NEW_PROP_CODE="$PROP_CODE"
+          fi
+
+          echo "pub=${NEW_PUB_BASE}-${SHORT_HASH}+${NEW_PUB_CODE}" >> $GITHUB_OUTPUT
+          echo "prop_version=${NEW_PROP_BASE}-${SHORT_HASH}" >> $GITHUB_OUTPUT
+          echo "prop_code=${NEW_PROP_CODE}" >> $GITHUB_OUTPUT
+
+      - name: 写入版本
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.pub }}/" pubspec.yaml
+          sed -i "s/^version=.*/version=${{ steps.version.outputs.prop_version }}/" ClashRoot/module.prop
+          sed -i "s/^versionCode=.*/versionCode=${{ steps.version.outputs.prop_code }}/" ClashRoot/module.prop
+
+      - name: 提交版本号变更
+        if: ${{ github.event.inputs.version != '' }}
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pubspec.yaml ClashRoot/module.prop
+          git diff --staged --quiet || git commit -m "Bump version to $INPUT_VERSION"
+          git push origin HEAD:${{ github.ref_name }}
 
       - name: 下载 GeoIP 和 Geosite
         run: |
@@ -65,13 +116,6 @@ jobs:
 
       - name: 安装依赖
         run: flutter pub get
-
-      - name: 注入 pubspec.yaml 版本 hash
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          BASE=${VERSION%%+*}
-          CODE=${VERSION##*+}
-          sed -i "s/^version:.*/version: ${BASE}-${SHORT_HASH}+${CODE}/" pubspec.yaml
 
       - name: Build APK (按 ABI 分割)
         run: |
