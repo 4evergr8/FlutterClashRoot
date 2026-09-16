@@ -11,48 +11,14 @@ jobs:
       - name: 下载代码
         uses: actions/checkout@v6
 
-      - name: 设置Flutter环境
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.44.4'
-
-      - name: 安装依赖
-        run: flutter pub get
-
       - name: 获取 commit hash
         run: |
           echo "SHORT_HASH=$(git rev-parse --short=6 HEAD)" >> $GITHUB_ENV
-
-      - name: 注入 pubspec.yaml 版本 hash
-        run: |
-          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
-          BASE=${VERSION%%+*}
-          CODE=${VERSION##*+}
-          sed -i "s/^version:.*/version: ${BASE}-${SHORT_HASH}+${CODE}/" pubspec.yaml
 
       - name: 注入 module.prop 版本 hash
         run: |
           HASH=$SHORT_HASH
           sed -i "s/^version=.*/version=2.2.2-${HASH}/" ClashRoot/module.prop
-
-      - name: Build APK (按 ABI 分割)
-        run: |
-          flutter build apk --release --target-platform android-arm64 --split-per-abi
-
-      - name: 重命名 APK（加入 hash）
-        run: |
-          HASH=$SHORT_HASH
-
-          mkdir -p output_apk
-
-          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
-             output_apk/ClashRoot-${HASH}.apk
-
-      - name: 上传 APK
-        uses: actions/upload-artifact@v7
-        with:
-          path: output_apk/*.apk
-          archive: false
 
       - name: 下载 GeoIP 和 Geosite
         run: |
@@ -85,8 +51,44 @@ jobs:
 
           (cd ClashRoot && zip -r ../ClashRoot-${HASH}.zip .)
 
-      - name: 上传 ZIP
+      - name: 上传模块包
         uses: actions/upload-artifact@v7
         with:
+          name: ClashRoot-Module
           path: ClashRoot-*.zip
+          archive: false
+
+      - name: 设置Flutter环境
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.4'
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 注入 pubspec.yaml 版本 hash
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+          BASE=${VERSION%%+*}
+          CODE=${VERSION##*+}
+          sed -i "s/^version:.*/version: ${BASE}-${SHORT_HASH}+${CODE}/" pubspec.yaml
+
+      - name: Build APK (按 ABI 分割)
+        run: |
+          flutter build apk --release --target-platform android-arm64 --split-per-abi
+
+      - name: 重命名 APK（加入 hash）
+        run: |
+          HASH=$SHORT_HASH
+
+          mkdir -p output_apk
+
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             output_apk/ClashRoot-${HASH}.apk
+
+      - name: 上传 APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: ClashRoot-APK
+          path: output_apk/*.apk
           archive: false
