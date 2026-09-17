@@ -120,6 +120,12 @@ Future<void> subscriptionsSwitch(String id) async {
 
   final config = await yamlRead(configPath);
 
+  final secret = data['secret'];
+
+  if (secret != null && secret.toString().isNotEmpty) {
+    config['secret'] = secret;
+  }
+
   final providers = Map<String, dynamic>.from(config['proxy-providers'] ?? {});
 
   if (providers.isEmpty) {
