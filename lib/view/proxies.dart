@@ -28,23 +28,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
   bool _disposed = false;
 
-  // 分组与内置类型，从 /proxies 的返回里剔除，只留真实节点
-  static const _groupTypes = {
-    'Selector',
-    'URLTest',
-    'Fallback',
-    'LoadBalance',
-    'Relay',
-    'Direct',
-    'Reject',
-    'RejectDrop',
-    'Compatible',
-    'Pass',
-  };
-
-  // GLOBAL 里除了真实节点，还包含其他代理组和 DIRECT 等内置代理
-  static const _builtinNames = {'GLOBAL', 'DIRECT', 'REJECT', 'REJECT-DROP', 'COMPATIBLE', 'PASS'};
-
   List<DelayItem> delayList = [];
   bool isTesting = false;
   bool isWaiting = false;
@@ -85,36 +68,36 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     throw Exception('页面已关闭');
   }
 
-  /// GLOBAL 组的全部节点
+  /// API 只反映运行时状态，不保留配置里的书写顺序，
+  /// 所以「第一个代理组」只能从 config.yaml 读
+  Future<String> _firstGroupName() async {
+    final config = await yamlRead(configPath);
+
+    final groups = (config['proxy-groups'] as List?) ?? [];
+
+    if (groups.isEmpty) {
+      throw Exception('config.yaml 中没有 proxy-groups');
+    }
+
+    return (groups.first as Map)['name'].toString();
+  }
+
+  /// 组内全部成员名称
   ///
   /// 核心刚启动时 provider 可能还没拉完订阅，名单会是空的，所以空名单也继续等
-  Future<List<String>> _fetchProxyNames(dynamic port, String secret) async {
+  Future<List<String>> _fetchProxyNames(String group, dynamic port, String secret) async {
     while (!_disposed) {
       try {
-        final res = await _get(Uri.parse('http://127.0.0.1:$port/proxies'), secret);
+        final res = await _get(
+          Uri.parse('http://127.0.0.1:$port/proxies/${Uri.encodeComponent(group)}'),
+          secret,
+        );
 
         final body = await res.transform(utf8.decoder).join();
 
         final jsonData = json.decode(body) as Map<String, dynamic>;
 
-        final all = (jsonData['proxies'] as Map?) ?? {};
-
-        final names =
-            all.entries
-                .where((e) {
-                  if (_builtinNames.contains(e.key.toString())) return false;
-
-                  final item = e.value as Map?;
-                  if (item == null) return false;
-
-                  final type = item['type'];
-                  if (type is String && _groupTypes.contains(type)) return false;
-
-                  // 代理组都带成员列表，真实节点没有
-                  return !item.containsKey('all');
-                })
-                .map((e) => e.key.toString())
-                .toList();
+        final names = (jsonData['all'] as List? ?? []).map((e) => e.toString()).toList();
 
         if (names.isNotEmpty) return names;
       } catch (_) {}
@@ -134,7 +117,9 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       final port = settings['port'];
       final secret = settings['secret'] ?? '';
 
-      final proxies = await _fetchProxyNames(port, secret);
+      final group = await _firstGroupName();
+
+      final proxies = await _fetchProxyNames(group, port, secret);
 
       if (!mounted) return;
 
@@ -173,7 +158,9 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       timeout = settings['testtimeout'];
       final expected = settings['expected'];
 
-      final proxies = await _fetchProxyNames(port, secret);
+      final group = await _firstGroupName();
+
+      final proxies = await _fetchProxyNames(group, port, secret);
 
       if (!mounted) return;
 
@@ -190,7 +177,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
         scheme: 'http',
         host: '127.0.0.1',
         port: port,
-        path: '/group/GLOBAL/delay',
+        path: '/group/${Uri.encodeComponent(group)}/delay',
         queryParameters: {'url': '$url', 'timeout': '$timeout', 'expected': '$expected'},
       );
 
