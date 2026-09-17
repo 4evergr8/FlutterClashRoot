@@ -16,8 +16,8 @@ geo-update-interval: 24
 etag-support: true
 geodata-mode: true
 geox-url:
-  geoip: "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
-  geosite: "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+  geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
 profile:
   store-selected: false
   store-fake-ip: true
@@ -54,7 +54,6 @@ rules:
 
   - GEOSITE,cn,DIRECT
   - GEOIP,cn,DIRECT,no-resolve
-  - GEOIP,private,DIRECT,no-resolve
 
   - GEOSITE,googlefcm,DIRECT
   - GEOSITE,private,DIRECT
@@ -71,6 +70,10 @@ rules:
   - GEOSITE,category-ai-!cn,🧠人工智能🧠
 
   - GEOSITE,category-cryptocurrency,🪙加密货币🪙
+
+  - GEOSITE,geolocation-!cn,⚡自动选择⚡
+
+  - GEOIP,private,DIRECT
 
   - MATCH,⚡自动选择⚡
 
@@ -113,9 +116,10 @@ proxy-groups:
     proxies: [ ]
 
   - name: 🎶媒体娱乐🎶
-    type: url-test
-    url: https://music.youtube.com/playlist?list=LM
-    expected-status: 200
+    type: load-balance
+    strategy: consistent-hashing
+    url: https://one.google.com
+    expected-status: 302
     interval: 600
     timeout: 3000
     max-failed-times: 5
@@ -126,7 +130,7 @@ proxy-groups:
   - name: 🌪️高速下载🌪️
     type: load-balance
     strategy: round-robin
-    url: https://kws5.web.telegram.org
+    url: https://www.google.com/generate_204
     expected-status: 204
     interval: 600
     timeout: 3000
@@ -139,7 +143,7 @@ proxy-groups:
 proxy-providers:
   provider:
     type: http
-    url: ""
+    url:
     path:
     interval: 10800
     size-limit: 0
