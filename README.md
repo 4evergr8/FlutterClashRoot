@@ -80,7 +80,7 @@ timeout: 10000
 url: "https://www.google.com"
 #节点测速链接
 secret: "111111"
-#Clash API密码,若config.yaml中设置了secret,两者需一致
+#Clash API密码,切换订阅时会自动写入config.yaml的secret字段
 testtimeout: 3000
 #节点测速超时,毫秒
 expected: 200
