@@ -4,7 +4,7 @@ port: 9090
 #软件打开的控制端口,需要和配置中的端口对应
 timeout: 10000
 #下载订阅超时,毫秒
-url: "ttps://www.google.com/generate_204"
+url: "https://www.google.com/generate_204"
 #节点测速链接
 secret: "111111"
 #Clash API密码
