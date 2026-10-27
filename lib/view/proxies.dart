@@ -68,20 +68,6 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
     throw Exception('页面已关闭');
   }
 
-  /// API 只反映运行时状态，不保留配置里的书写顺序，
-  /// 所以「第一个代理组」只能从 config.yaml 读
-  Future<String> _firstGroupName() async {
-    final config = await yamlRead(configPath);
-
-    final groups = (config['proxy-groups'] as List?) ?? [];
-
-    if (groups.isEmpty) {
-      throw Exception('config.yaml 中没有 proxy-groups');
-    }
-
-    return (groups.first as Map)['name'].toString();
-  }
-
   /// 组内全部成员名称
   ///
   /// 核心刚启动时 provider 可能还没拉完订阅，名单会是空的，所以空名单也继续等
@@ -116,8 +102,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
       final port = settings['port'];
       final secret = settings['secret'] ?? '';
-
-      final group = await _firstGroupName();
+      final String group = settings['group'];
 
       final proxies = await _fetchProxyNames(group, port, secret);
 
@@ -158,7 +143,7 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
       timeout = settings['testtimeout'];
       final expected = settings['expected'];
 
-      final group = await _firstGroupName();
+      final String group = settings['group'];
 
       final proxies = await _fetchProxyNames(group, port, secret);
 
