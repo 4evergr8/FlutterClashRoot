@@ -4,14 +4,15 @@ port: 9090
 #软件打开的控制端口,需要和配置中的端口对应
 timeout: 10000
 #下载订阅超时,毫秒
-url: "https://www.google.com"
+url: "ttps://www.google.com/generate_204"
 #节点测速链接
 secret: "111111"
 #Clash API密码
 testtimeout: 3000
 #节点测速超时,毫秒
-expected: 200
+expected: 204
 #节点测速返回码,只有匹配的返回码才算alive
+group: ⚡自动选择⚡
 subscriptions:
   - id: "example"
     #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
