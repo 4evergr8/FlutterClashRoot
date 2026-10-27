@@ -3,7 +3,7 @@ external-controller: 0.0.0.0:9090
 external-ui: ./metacubexd
 allow-lan: false
 log-level: warning
-ipv6: true
+ipv6: false
 disable-keep-alive: true
 keep-alive-idle: 10
 keep-alive-interval: 60
@@ -36,7 +36,7 @@ dns:
   enable: true
   cache-algorithm: lru
   listen: 0.0.0.0:1053
-  ipv6: true
+  ipv6: false
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter-mode: blacklist
@@ -54,53 +54,63 @@ rules:
 
   - GEOSITE,cn,DIRECT
   - GEOIP,cn,DIRECT,no-resolve
+  - GEOIP,private,DIRECT,no-resolve
 
   - GEOSITE,googlefcm,DIRECT
   - GEOSITE,private,DIRECT
 
-  - DOMAIN-SUFFIX,pages.dev,DIRECT
+  - DOMAIN-SUFFIX,trycloudflare.com,DIRECT
 
-  - GEOIP,telegram,🌪️高速下载🌪️,no-resolve
-  - GEOSITE,telegram,🌪️高速下载🌪️
-  - GEOSITE,huggingface,🌪️高速下载🌪️
   - DOMAIN-SUFFIX,storage.googleapis.com,🌪️高速下载🌪️
   - GEOSITE,category-netdisk-!cn,🌪️高速下载🌪️
-  - GEOSITE,category-entertainment,🎶媒体娱乐🎶
+  - GEOSITE,youtube,🎶YouTube🎶
 
   - GEOSITE,category-ai-!cn,🧠人工智能🧠
 
   - GEOSITE,category-cryptocurrency,🪙加密货币🪙
 
-  - GEOSITE,geolocation-!cn,⚡自动选择⚡
+  - GEOSITE,geolocation-!cn,📌节点选择📌
 
-  - GEOIP,private,DIRECT
+  - GEOIP,cn,DIRECT
 
-  - MATCH,⚡自动选择⚡
+  - MATCH,📌节点选择📌
 
 
 proxy-groups:
+  - name: 📌节点选择📌
+    type: select
+    filter: HK|香港|🇭🇰|US|美国|🇺🇸|JP|日本|🇯🇵
+    include-all-proxies: true
+    include-all-providers: true
+    proxies:
+      - ⚡自动选择⚡
+      - 🌪️高速下载🌪️
+
   - name: ⚡自动选择⚡
     type: url-test
     url: https://www.google.com/generate_204
-    expected-status: 204
     interval: 600
+    lazy: false
+    expected-status: 204
     timeout: 3000
-    max-failed-times: 5
+    max-failed-times: 3
     tolerance: 50
-    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|KR|韩国|🇰🇷
-    include-all: true
+    exclude-filter: KR|韩国|🇰🇷
+    include-all-proxies: true
+    include-all-providers: true
     proxies: [ ]
 
   - name: 🧠人工智能🧠
     type: url-test
     url: https://api.openai.com/v1/models
-    expected-status: 401
     interval: 600
+    lazy: true
+    expected-status: 401
     timeout: 3000
-    max-failed-times: 5
+    max-failed-times: 3
     tolerance: 50
-    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺
-    include-all: true
+    include-all-proxies: true
+    include-all-providers: true
     proxies: [ ]
 
   - name: 🪙加密货币🪙
@@ -108,23 +118,26 @@ proxy-groups:
     url: https://api.binance.com/api/v3/ping
     expected-status: 200
     interval: 600
+    lazy: true
     timeout: 3000
-    max-failed-times: 5
+    max-failed-times: 3
     tolerance: 50
-    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|US|美国|🇺🇸
-    include-all: true
+    exclude-filter: US|美国|🇺🇸
+    include-all-proxies: true
+    include-all-providers: true
     proxies: [ ]
 
-  - name: 🎶媒体娱乐🎶
-    type: load-balance
-    strategy: consistent-hashing
+  - name: 🎶YouTube🎶
+    type: url-test
     url: https://one.google.com
     expected-status: 302
     interval: 600
+    lazy: true
     timeout: 3000
-    max-failed-times: 5
-    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺|KR|韩国|🇰🇷
-    include-all: true
+    max-failed-times: 3
+    exclude-filter: KR|韩国|🇰🇷
+    include-all-proxies: true
+    include-all-providers: true
     proxies: [ ]
 
   - name: 🌪️高速下载🌪️
@@ -134,9 +147,9 @@ proxy-groups:
     expected-status: 204
     interval: 600
     timeout: 3000
-    max-failed-times: 5
-    exclude-filter: 订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺
-    include-all: true
+    max-failed-times: 3
+    include-all-proxies: true
+    include-all-providers: true
     proxies: [ ]
 
 
@@ -150,4 +163,11 @@ proxy-providers:
     header:
       User-Agent:
         - "clash.meta"
-    exclude-filter: "订阅|频道|到期|官网|剩余|RU|俄罗斯|🇷🇺"
+    exclude-filter: KR|韩国|🇰🇷
+    health-check:
+      enable: true
+      url: https://www.google.com/generate_204
+      interval: 600
+      timeout: 3000
+      lazy: true
+      expected-status: 204
