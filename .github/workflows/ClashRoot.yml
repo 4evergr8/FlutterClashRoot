@@ -109,6 +109,12 @@ jobs:
           path: ClashRoot-*.zip
           archive: false
 
+      - name: 设置 JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: 设置Flutter环境
         uses: subosito/flutter-action@v2
         with:
