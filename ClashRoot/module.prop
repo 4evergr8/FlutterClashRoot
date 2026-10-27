@@ -1,6 +1,6 @@
 id=ClashRoot
 name=ClashRoot KSU模块
-version=2.3.0-94baf6
-versionCode=17
+version=2.3.1-f67ccc
+versionCode=18
 author=4evergr8
 description=基于Flutter框架的Clash内核控制器，仅限Root用户,仅限KernelSU
