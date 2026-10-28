@@ -52,9 +52,10 @@
   <tr>
 <td width="25%"><img src="./assets/3.jpg" width="100%"></td>
     <td width="25%"><img src="./assets/4.jpg" width="100%"></td>
-    <td width="25%"><img src="./assets/5.jpg" width="100%"></td>
+
   </tr>
-</table>
+</table>  
+
 ## 食用方法
 
 1. 前往[Release](https://github.com/4evergr8/ClashRoot/releases)下载对应架构的APK和ClashRoot.zip
