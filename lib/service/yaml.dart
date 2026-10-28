@@ -113,6 +113,97 @@ Future<Map<String, int>> fileModifiedMs(List<String> ids) async {
   return result;
 }
 
+const int _nameFoldAt = 7;
+const int _nameHead = 3;
+const int _nameTail = 3;
+
+/// 超过 [_nameFoldAt] 个字符就折叠成「前3…后3」
+///
+/// 按码点切分，避免把 emoji 截成半个代理对
+String _foldName(String s) {
+  final chars = s.runes.toList();
+
+  if (chars.length <= _nameFoldAt) return s;
+
+  final head = String.fromCharCodes(chars.take(_nameHead));
+  final tail = String.fromCharCodes(chars.skip(chars.length - _nameTail));
+
+  return '$head…$tail';
+}
+
+/// 32 位滚动哈希取 base36 前 6 位
+String _shortHash(String link) {
+  var h = 0;
+
+  for (var i = 0; i < link.length; i++) {
+    h = ((h << 5) - h + link.codeUnitAt(i)).toSigned(32);
+  }
+
+  final text = h.abs().toRadixString(36);
+
+  return text.length <= 6 ? text : text.substring(0, 6);
+}
+
+String _decodeSegment(String p) {
+  try {
+    return Uri.decodeComponent(p);
+  } catch (_) {
+    return p;
+  }
+}
+
+/// 订阅名：优先用上游 Content-Disposition 里的文件名，没有就按链接推导，
+/// 统一追加 `--短哈希` 保证同名订阅可区分
+String _buildName(String? contentDisposition, String link) {
+  var baseName = '';
+
+  if (contentDisposition != null) {
+    final m = RegExp(r"filename\*?=([^;]+)", caseSensitive: false).firstMatch(contentDisposition);
+
+    if (m != null) {
+      var name = m.group(1)!.trim();
+
+      if (name.toLowerCase().startsWith("utf-8''")) {
+        try {
+          name = Uri.decodeComponent(name.substring(7));
+        } catch (_) {
+          name = '';
+        }
+      } else {
+        name = name.replaceAll(RegExp(r'''^["']|["']$'''), '');
+      }
+
+      baseName = name.replaceAll(RegExp(r'\.[^/.]+$'), '');
+    }
+  }
+
+  if (baseName.isEmpty) {
+    try {
+      final uri = Uri.parse(link);
+
+      var domain = uri.host.toLowerCase();
+      final parts = domain.split('.');
+
+      if (parts.length >= 2) domain = parts[parts.length - 2];
+
+      if (domain.isEmpty) throw const FormatException('no host');
+
+      final pathParts = uri.path.split('/').where((p) => p.isNotEmpty).map(_decodeSegment).toList();
+
+      final nameParts = [_foldName(domain)];
+
+      if (pathParts.isNotEmpty) nameParts.add(_foldName(pathParts[0]));
+      if (pathParts.length >= 2) nameParts.add(_foldName(pathParts[1]));
+
+      baseName = nameParts.join('/');
+    } catch (_) {
+      baseName = 'subscription';
+    }
+  }
+
+  return '$baseName--${_shortHash(link)}';
+}
+
 Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int timeout) async {
   final dio = Dio();
   final dir = await getApplicationDocumentsDirectory();
@@ -133,23 +224,8 @@ Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int 
     );
 
     final headers = response.headers.map;
-    String label = id;
 
-    final cd = headers['content-disposition']?.first;
-    if (cd != null) {
-      final fileNameStar = RegExp(r"filename\*\s*=\s*([^;]+)").firstMatch(cd)?.group(1);
-      if (fileNameStar != null) {
-        final parts = fileNameStar.split("''");
-        if (parts.length == 2) {
-          try {
-            label = Uri.decodeComponent(parts[1]);
-          } catch (_) {}
-        }
-      }
-
-      final fileName = RegExp(r'filename="?([^"]+)"?').firstMatch(cd)?.group(1);
-      if (fileName != null && fileName.isNotEmpty) label = fileName;
-    }
+    final label = _buildName(headers['content-disposition']?.first, url);
 
     int upload = 0, downloadBytes = 0, total = 0, expire = 0;
 
@@ -178,22 +254,6 @@ Future<Map<String, dynamic>> yamlDownload(String url, String ua, String id, int 
             break;
         }
       }
-    }
-
-    final file = File(filePath);
-    final text = await file.readAsString();
-
-    dynamic obj;
-    try {
-      obj = const YamlCodec().decode(text);
-    } catch (e) {
-      throw Exception('YAML 解析失败: $e');
-    }
-
-    final converted = _convertYaml(obj);
-
-    if (converted is! Map<String, dynamic>) {
-      throw Exception(text);
     }
 
     final result = await Process.run('su', ['-c', 'cp $filePath $mainPath/config/$id.yaml']);
