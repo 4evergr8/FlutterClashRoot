@@ -194,32 +194,30 @@ Future<Map<String, dynamic>> subscriptionsAdd(Map<String, dynamic> data, String 
   final ua = data['ua'];
   final timeout = data['timeout'];
   final list = data['subscriptions'];
-  final existingIds = list.map((e) => e['id']).toSet();
-  final inputLinks = input.split('\n').map((e) => canonicalUrl(e)).where((e) => e.isNotEmpty).toList();
+  final existingLinks = list.map((e) => e['link']).whereType<String>().toSet();
 
   final seen = <String>{};
   final links = <String>[];
-  for (var l in inputLinks) {
-    if (!seen.contains(l)) {
-      seen.add(l);
-      links.add(l);
-    }
-  }
 
-  final newLinks = <String>[];
+  for (final raw in input.split('\n')) {
+    final text = raw.trim();
 
-  for (var link in links) {
-    final id = sha256Prefix(link);
-    if (existingIds.contains(id)) {
-    } else {
-      newLinks.add(link);
-    }
+    // 空行在这里就丢掉，不能指望 canonicalUrl 之后再过滤：
+    // 空串经规范化会变成 "///"，非空，拦不住
+    if (text.isEmpty) continue;
+
+    final link = canonicalUrl(text);
+
+    if (existingLinks.contains(link)) continue;
+    if (!seen.add(link)) continue;
+
+    links.add(link);
   }
 
   final futures =
-      newLinks.map((link) async {
+      links.map((link) async {
         try {
-          return await yamlDownload(canonicalUrl(link), ua, sha256Prefix(link), timeout);
+          return await yamlDownload(link, ua, sha256Prefix(link), timeout);
         } catch (e) {
           showSnackBarGlobal("error", '$link 添加失败: $e');
           return null;
