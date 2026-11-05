@@ -233,23 +233,17 @@ class _ProxiesViewState extends State<ProxiesView> with AutomaticKeepAliveClient
 
   Color _getColor(BuildContext context, int delay) {
     final cs = Theme.of(context).colorScheme;
-    final t = timeout;
 
     // 未测试
     if (delay == -1) return cs.outline;
 
     // timeout 或不可用（包含 0 / 超时）
-    if (delay <= 0 || delay > t) return cs.error;
+    if (delay <= 0 || delay >= timeout) return cs.error;
 
-    final step = t / 3;
-
-    if (delay <= 0) return cs.error;
-    if (delay >= t) return cs.error;
-
-    if (delay < step) return cs.primary;
-    if (delay < step * 2) return cs.secondary;
-
-    return cs.tertiary;
+    // 两头取主题色（超时 = error，最快 = primary），中间按 timeout 等分；
+    // 延迟越低，从“超时”端往“最快”端走得越远
+    final t = 1 - (delay / timeout).clamp(0.0, 1.0);
+    return Color.lerp(cs.error, cs.primary, t)!;
   }
 
   String _formatDelay(int delay) {
