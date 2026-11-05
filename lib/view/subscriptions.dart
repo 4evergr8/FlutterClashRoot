@@ -129,6 +129,16 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
 
             final isSelected = sub['select'] == true;
 
+            final cs = Theme.of(context).colorScheme;
+            final count = (sub['count'] ?? 0) as int;
+            final alive = (sub['alive'] ?? 0) as int;
+
+            // 两头取主题色（不健康 = error，健康 = primary），中间按 count 等分；
+            // 活着的节点数就是从“不健康”端往“健康”端走的份数
+            final t = count <= 0 ? 0.0 : (alive / count).clamp(0.0, 1.0);
+            final pillColor = Color.lerp(cs.error, cs.primary, t)!;
+            final pillTextColor = Color.lerp(cs.onError, cs.onPrimary, t)!;
+
             return Card(
               color:
                   isSelected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surface,
@@ -151,46 +161,12 @@ class _SubscriptionViewState extends State<SubscriptionView> with AutomaticKeepA
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                             decoration: BoxDecoration(
-                              color:
-                                  (() {
-                                    final cs = Theme.of(context).colorScheme;
-                                    final count = sub['count'] ?? 0;
-                                    final alive = sub['alive'] ?? 0;
-
-                                    if (count == 0) return cs.error;
-
-                                    final r = count == 0 ? 0.0 : alive / count;
-
-                                    if (r >= 2 / 3) return cs.primary; // 健康
-                                    if (r >= 1 / 3) return cs.secondary; // 一般
-                                    if (r > 0) return cs.tertiary; // 较差
-
-                                    return cs.error; // 全挂
-                                  })(),
+                              color: pillColor,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               '${sub['alive'] ?? 0}/${sub['count'] ?? 0}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                height: 1,
-                                color:
-                                    (() {
-                                      final cs = Theme.of(context).colorScheme;
-                                      final count = sub['count'] ?? 0;
-                                      final alive = sub['alive'] ?? 0;
-
-                                      if (count == 0) return cs.onError;
-
-                                      final r = count == 0 ? 0.0 : alive / count;
-
-                                      if (r >= 2 / 3) return cs.onPrimary; // 健康
-                                      if (r >= 1 / 3) return cs.onSecondary; // 一般
-                                      if (r > 0) return cs.onTertiary; // 较差
-
-                                      return cs.onError; // 全挂
-                                    })(),
-                              ),
+                              style: TextStyle(fontSize: 12, height: 1, color: pillTextColor),
                             ),
                           ),
                           const SizedBox(width: 2),
