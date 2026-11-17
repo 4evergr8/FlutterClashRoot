@@ -39,12 +39,20 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
-      // 分流配置存放在 data.yaml，config.yaml 只在切换/保存时被写入
+      // 分流配置存放在 data.yaml 顶层，config.yaml 只在切换/保存时被写入
       final data = await yamlRead(dataPath);
-      final split = data['split'];
 
-      isWhitelist = split?['whitelist'] == true;
-      yamlPackages = List<String>.from(split?['packages'] ?? []).toSet();
+      // 黑名单优先：有 exclude-package 就是黑名单，否则看 include-package，都没有则默认黑名单
+      if (data['exclude-package'] != null) {
+        isWhitelist = false;
+        yamlPackages = List<String>.from(data['exclude-package']).toSet();
+      } else if (data['include-package'] != null) {
+        isWhitelist = true;
+        yamlPackages = List<String>.from(data['include-package']).toSet();
+      } else {
+        isWhitelist = false;
+        yamlPackages = {};
+      }
       selectedPackages = yamlPackages.toSet();
 
       final appList = await FlutterDeviceApps.listApps(includeSystem: true, includeIcons: true, onlyLaunchable: false);
@@ -99,7 +107,10 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
         apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
     final data = await subscriptionsLoad();
-    data['split'] = {'whitelist': isWhitelist, 'packages': checkedPackages.toList()};
+    final key = isWhitelist ? 'include-package' : 'exclude-package';
+    data.remove('include-package');
+    data.remove('exclude-package');
+    data[key] = checkedPackages.toList();
     await yamlWrite(data, dataPath);
 
     // 切换订阅时会把 data.yaml 里的分流配置写入 config.yaml 并重启内核
