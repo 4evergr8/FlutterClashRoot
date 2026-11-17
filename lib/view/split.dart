@@ -39,30 +39,13 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final close = showSnackBarGlobal("load", "请稍候...");
 
     try {
-      final config = await yamlRead(configPath);
+      // 分流配置存放在 data.yaml，config.yaml 只在切换/保存时被写入
+      final data = await yamlRead(dataPath);
+      final split = data['split'];
 
-      // 判断名单方向和列表
-      if (config['tun'] != null) {
-        if (config['tun']['include-package'] != null) {
-          isWhitelist = true;
-          final includePackages = List<String>.from(config['tun']['include-package']);
-          yamlPackages = includePackages.toSet();
-          selectedPackages = includePackages.toSet();
-        } else if (config['tun']['exclude-package'] != null) {
-          isWhitelist = false;
-          final excludePackages = List<String>.from(config['tun']['exclude-package']);
-          yamlPackages = excludePackages.toSet();
-          selectedPackages = excludePackages.toSet();
-        } else {
-          isWhitelist = false;
-          yamlPackages = {};
-          selectedPackages = {};
-        }
-      } else {
-        isWhitelist = false;
-        yamlPackages = {};
-        selectedPackages = {};
-      }
+      isWhitelist = split?['whitelist'] == true;
+      yamlPackages = List<String>.from(split?['packages'] ?? []).toSet();
+      selectedPackages = yamlPackages.toSet();
 
       final appList = await FlutterDeviceApps.listApps(includeSystem: true, includeIcons: true, onlyLaunchable: false);
       final validApps = appList.where((a) => a.packageName != null && a.appName != null).toList();
@@ -115,20 +98,11 @@ class _SplitViewState extends State<SplitView> with AutomaticKeepAliveClientMixi
     final checkedPackages =
         apps.where((a) => selectedPackages.contains(a.packageName)).map((a) => a.packageName!).toSet();
 
-    final config = await yamlRead(configPath);
-
-    config['tun'] ??= {};
-
-    if (isWhitelist) {
-      config['tun']['include-package'] = checkedPackages.toList();
-      config['tun'].remove('exclude-package');
-    } else {
-      config['tun']['exclude-package'] = checkedPackages.toList();
-      config['tun'].remove('include-package');
-    }
-
-    await yamlWrite(config, configPath);
     final data = await subscriptionsLoad();
+    data['split'] = {'whitelist': isWhitelist, 'packages': checkedPackages.toList()};
+    await yamlWrite(data, dataPath);
+
+    // 切换订阅时会把 data.yaml 里的分流配置写入 config.yaml 并重启内核
     final subs = data['subscriptions'];
     final selectedSub = subs.firstWhere((sub) => sub['select'] == true);
     await subscriptionsSwitch(selectedSub['id']);
