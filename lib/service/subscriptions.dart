@@ -141,6 +141,18 @@ Future<void> subscriptionsSwitch(String id) async {
   providers[name] = provider;
   config['proxy-providers'] = providers;
 
+  // 分流配置以 data.yaml 为准，每次切换订阅都同步写入 config.yaml
+  final split = data['split'];
+  if (split != null) {
+    final tun = Map<String, dynamic>.from(config['tun'] ?? {});
+    tun.remove('include-package');
+    tun.remove('exclude-package');
+    tun[split['whitelist'] == true ? 'include-package' : 'exclude-package'] = List<String>.from(
+      split['packages'] ?? [],
+    );
+    config['tun'] = tun;
+  }
+
   await yamlWrite(config, configPath);
   await clashStart();
 }
