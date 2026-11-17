@@ -13,12 +13,9 @@ testtimeout: 3000
 expected: 204
 #节点测速返回码,只有匹配的返回码才算alive
 group: ⚡自动选择⚡
-split:
-  whitelist: false
-  #分流模式,true=白名单(仅选中应用走代理),false=黑名单(选中应用不走代理)
-  packages:
-    #分流的应用包名列表
-    - tv.danmaku.bili
+exclude-package:
+  #黑名单,选中的应用不走代理;白名单则改用 include-package
+  - tv.danmaku.bili
 subscriptions:
   - id: "example"
     #订阅的ID,链接标准化后,进行SHA256计算,取前8位,同时用作文件名
