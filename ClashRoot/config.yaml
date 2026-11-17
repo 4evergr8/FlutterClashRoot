@@ -30,6 +30,8 @@ tun:
   auto-route: true
   auto-detect-interface: true
   strict-route: true
+  exclude-package:
+    - tv.danmaku.bili
 
 
 dns:
